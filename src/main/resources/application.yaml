@@ -1,0 +1,34 @@
+server:
+  port: 8962
+  tomcat:
+    basedir: ${user.home}/peashooter/tmp
+
+spring:
+  application:
+    name: peashooter
+  jackson:
+    time-zone: GMT+8
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+      show-sql: true
+  datasource:
+    url: jdbc:h2:file:~/peashooter/db;FILE_LOCK=FS
+    username: sa
+    password: sa
+  cache:
+    caffeine:
+      spec: initialCapacity=50,maximumSize=100,expireAfterWrite=3h,expireAfterAccess=3h
+
+logging:
+  file:
+    name: ${user.home}/peashooter/logs/peashooter.log
+
+peashooter:
+  username: ${PEASHOOTER_USERNAME:admin}
+  password: ${PEASHOOTER_PASSWORD:admin}
+
+jwt:
+  period: 1800s

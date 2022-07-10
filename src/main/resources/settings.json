@@ -1,0 +1,19 @@
+{
+  "basic":{
+    "mappingUrl":"http://172.17.0.1:8962"
+  },
+  "httpProxy":{
+    "host":"localhost",
+    "port":7000
+  },
+  "qbittorrent":{
+    "password":"admin",
+    "url":"http://localhost:8000",
+    "username":"admin"
+  },
+  "sonarr":{
+    "apiKey":"123",
+    "syncSeconds":5,
+    "url":"http://localhost:9000"
+  }
+}
