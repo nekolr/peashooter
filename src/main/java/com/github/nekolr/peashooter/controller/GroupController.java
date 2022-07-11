@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 import static com.github.nekolr.peashooter.constant.Peashooter.CHARSET;
 
 @RestController
-@RequestMapping("group")
+@RequestMapping("api/group")
 @RequiredArgsConstructor
 public class GroupController {
     private final IGroupService groupService;

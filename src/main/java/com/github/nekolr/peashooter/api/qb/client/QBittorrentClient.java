@@ -37,8 +37,8 @@ public class QBittorrentClient implements QBittorrentApi {
     public AppVersion getAppVersion() {
         String url = settingsManager.get().getQbittorrent().getUrl() + APP_VERSION_URI;
         HttpRequest request = HttpRequest.get(url);
-        request.header("Cookie", "SID=" + this.login().sid());
         try {
+            request.header("Cookie", "SID=" + this.login().sid());
             HttpResponse response = request.send();
             if (response.statusCode() != 200)
                 return null;

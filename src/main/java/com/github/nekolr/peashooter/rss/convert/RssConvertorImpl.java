@@ -35,7 +35,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 @RequiredArgsConstructor
 public class RssConvertorImpl implements RssConvertor {
 
-    private static final String TORRENTS_URI = "/torrents";
+    private static final String TORRENTS_URI = "/api/torrents";
     private static final String TORRENT_URI_PARAM_SERIES = "series";
     private static final String TORRENT_URI_PARAM_URL = "url";
     private static final String TORRENT_URI_PARAM_TITLE = "title";

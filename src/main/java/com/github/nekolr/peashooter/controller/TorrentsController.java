@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Controller
-@RequestMapping("torrents")
+@RequestMapping("api/torrents")
 @RequiredArgsConstructor
 public class TorrentsController {
 
