@@ -14,6 +14,7 @@ public class Settings {
     @Data
     @Builder
     public static class Basic {
+        private String apiKey;
         private String mappingUrl;
     }
 

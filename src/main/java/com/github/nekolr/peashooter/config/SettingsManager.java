@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
 import jodd.io.FileUtil;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 
@@ -31,5 +32,12 @@ public class SettingsManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean validApiKey(String apiKey) {
+        if (StringUtils.hasText(apiKey)) {
+            return apiKey.equals(settings.getBasic().getApiKey());
+        }
+        return false;
     }
 }

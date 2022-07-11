@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("settings")
+@RequestMapping("api/settings")
 @RequiredArgsConstructor
 public class SettingsController {
 
@@ -31,7 +31,7 @@ public class SettingsController {
         return JsonBean.ok();
     }
 
-    @PostMapping("qbittorrent")
+    @PostMapping("qBittorrent")
     public JsonBean<Void> setQbittorrent(@RequestBody SetQbittorrent setting) {
         settingsService.setQbittorrent(setting);
         return JsonBean.ok();
@@ -45,5 +45,10 @@ public class SettingsController {
     @GetMapping("test-qb")
     public JsonBean<Boolean> testQb() {
         return JsonBean.ok(settingsService.testQb());
+    }
+
+    @PostMapping("basic/refreshApiKey")
+    public JsonBean<String> refreshApiKey() {
+        return JsonBean.ok(settingsService.refreshApiKey());
     }
 }

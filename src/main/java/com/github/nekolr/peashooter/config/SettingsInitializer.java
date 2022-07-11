@@ -1,14 +1,14 @@
 package com.github.nekolr.peashooter.config;
 
 import com.alibaba.fastjson2.JSON;
+import com.github.nekolr.peashooter.util.RandomUtil;
 import jodd.io.FileUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -43,9 +43,11 @@ public class SettingsInitializer implements InitializingBean {
         final String filePath = SETTINGS_DIR + SETTINGS_FILE_NAME;
         if (!FileUtil.isExistingFile(new File(filePath))) {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(SETTINGS_FILE_NAME);
-            FileCopyUtils.copy(inputStream, new FileOutputStream(filePath));
+            Settings settings = JSON.parseObject(inputStream, Settings.class);
+            settings.getBasic().setApiKey(RandomUtil.generate(32));
+            settingsManager.update(settings);
+        } else {
+            settingsManager.update(JSON.parseObject(FileUtil.readString(filePath), Settings.class));
         }
-
-        settingsManager.update(JSON.parseObject(FileUtil.readString(filePath), Settings.class));
     }
 }

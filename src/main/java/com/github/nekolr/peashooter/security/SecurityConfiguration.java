@@ -13,8 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final AccessAuthenticationFilter accessAuthenticationFilter;
+    private final AccessAuthenticationEntryPoint authenticationEntryPoint;
 
 
     @Bean
@@ -59,14 +59,14 @@ public class SecurityConfiguration {
                 // 主页可以匿名访问
                 .antMatchers(HttpMethod.GET, "/").anonymous()
                 // 登录请求不拦截（如果登录请求头包含 Authorization: Bearer 任意字符，那么还是会进行校验）
-                .antMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/login").permitAll()
 
                 // 其他所有请求都要经过验证
                 .anyRequest().authenticated();
 
         httpSecurity
                 // 添加登录和权限校验的两个过滤器
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(accessAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }

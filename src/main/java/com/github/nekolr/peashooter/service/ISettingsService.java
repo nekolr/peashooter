@@ -15,4 +15,6 @@ public interface ISettingsService {
     void setSonarr(SetSonarr setting);
 
     void setQbittorrent(SetQbittorrent setting);
+
+    String refreshApiKey();
 }

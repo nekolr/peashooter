@@ -9,6 +9,7 @@ import com.github.nekolr.peashooter.config.Settings.*;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.controller.req.settings.*;
 import com.github.nekolr.peashooter.service.ISettingsService;
+import com.github.nekolr.peashooter.util.RandomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -85,5 +86,14 @@ public class SettingsServiceImpl implements ISettingsService {
 
         settings.setQbittorrent(qBitTorrent);
         settingsManager.update(settings);
+    }
+
+    @Override
+    public String refreshApiKey() {
+        Settings settings = settingsManager.get();
+        String apiKey = RandomUtil.generate(32);
+        settings.getBasic().setApiKey(apiKey);
+        settingsManager.update(settings);
+        return apiKey;
     }
 }
