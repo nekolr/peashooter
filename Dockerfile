@@ -9,6 +9,17 @@ RUN mvn clean package
 
 FROM openjdk:17-slim
 
+ENV PEASHOOTER_USERNAME admin
+ENV PEASHOOTER_USERNAME admin
+ENV TZ Asia/Shanghai
+
 COPY --from=build /usr/src/app/target/peashooter.jar .
 EXPOSE 8962
-CMD java -Djava.security.egd=file:/dev/./urandom -jar peashooter.jar
+
+# Add Tini
+RUN apk add --no-cache tini
+# Tini is now available at /sbin/tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Run java under Tini
+CMD ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "peashooter.jar"]
