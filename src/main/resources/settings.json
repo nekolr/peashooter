@@ -4,7 +4,7 @@
     "mappingUrl":"http://172.17.0.1:8962"
   },
   "httpProxy":{
-    "host":"localhost",
+    "ip":"localhost",
     "port":7000
   },
   "qbittorrent":{

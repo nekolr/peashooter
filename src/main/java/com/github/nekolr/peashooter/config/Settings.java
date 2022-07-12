@@ -37,7 +37,7 @@ public class Settings {
     @Data
     @Builder
     public static class HttpProxy {
-        private String host;
+        private String ip;
         private Integer port;
     }
 

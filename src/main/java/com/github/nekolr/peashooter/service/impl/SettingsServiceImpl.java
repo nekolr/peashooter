@@ -52,7 +52,7 @@ public class SettingsServiceImpl implements ISettingsService {
         Settings settings = settingsManager.get();
 
         HttpProxy httpProxy = Settings.HttpProxy.builder()
-                .host(setting.host())
+                .ip(setting.ip())
                 .port(setting.port())
                 .build();
 
