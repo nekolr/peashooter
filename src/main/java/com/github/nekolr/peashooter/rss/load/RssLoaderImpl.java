@@ -40,10 +40,10 @@ public class RssLoaderImpl implements RssLoader {
     }
 
     private void setupProxy(HttpRequest request) {
-        String proxyHost = settingsManager.get().getHttpProxy().getHost();
+        String proxyIp = settingsManager.get().getHttpProxy().getIp();
         Integer proxyPort = settingsManager.get().getHttpProxy().getPort();
         SocketHttpConnectionProvider provider = new SocketHttpConnectionProvider();
-        provider.useProxy(ProxyInfo.httpProxy(proxyHost, proxyPort, null, null));
+        provider.useProxy(ProxyInfo.httpProxy(proxyIp, proxyPort, null, null));
         request.withConnectionProvider(provider);
     }
 }
