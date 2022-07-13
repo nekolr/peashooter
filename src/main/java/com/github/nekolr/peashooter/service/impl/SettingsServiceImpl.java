@@ -96,4 +96,9 @@ public class SettingsServiceImpl implements ISettingsService {
         settingsManager.update(settings);
         return apiKey;
     }
+
+    @Override
+    public Settings get() {
+        return settingsManager.get();
+    }
 }

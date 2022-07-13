@@ -1,5 +1,6 @@
 package com.github.nekolr.peashooter.service;
 
+import com.github.nekolr.peashooter.config.Settings;
 import com.github.nekolr.peashooter.controller.req.settings.*;
 
 public interface ISettingsService {
@@ -17,4 +18,6 @@ public interface ISettingsService {
     void setQbittorrent(SetQbittorrent setting);
 
     String refreshApiKey();
+
+    Settings get();
 }
