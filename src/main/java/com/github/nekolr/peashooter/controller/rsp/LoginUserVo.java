@@ -12,5 +12,5 @@ public class LoginUserVo implements Serializable {
 
     private String token;
 
-    private LoginUser loginUser;
+    private LoginUser user;
 }
