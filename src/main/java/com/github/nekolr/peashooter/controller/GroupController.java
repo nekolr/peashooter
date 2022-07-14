@@ -4,6 +4,7 @@ import com.github.nekolr.peashooter.controller.req.group.AddGroup;
 import com.github.nekolr.peashooter.entity.JsonBean;
 import com.github.nekolr.peashooter.service.IGroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class GroupController {
         String rss = groupService.getRss(filename);
         try {
             OutputStream out = resp.getOutputStream();
+            resp.setContentType(MediaType.APPLICATION_RSS_XML_VALUE);
             StreamUtils.copy(rss, Charset.forName(CHARSET), out);
         } catch (IOException e) {
             throw new RuntimeException(e);
