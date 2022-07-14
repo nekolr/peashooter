@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,13 +24,8 @@ public class DataSourceController {
     }
 
     @PostMapping("getList")
-    public JsonBean<Page<DataSource>> getDataSourceList(@RequestBody GetDataSourceList getList) {
-        DataSource dataSource = new DataSource();
-        String dataSourceName = getList.dataSourceName();
-        if (StringUtils.hasText(dataSourceName)) {
-            dataSource.setName(dataSourceName);
-        }
-        Pageable pageable = PageRequest.of(getList.pageNo() - 1, getList.pageSize());
-        return JsonBean.ok(dataSourceService.findAllByPage(dataSource, pageable));
+    public JsonBean<Page<DataSource>> getDataSourceList(@RequestBody GetDataSourceList cmd) {
+        Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
+        return JsonBean.ok(dataSourceService.findAllByPage(cmd, pageable));
     }
 }

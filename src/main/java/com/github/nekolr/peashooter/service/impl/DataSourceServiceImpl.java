@@ -1,18 +1,16 @@
 package com.github.nekolr.peashooter.service.impl;
 
+import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
-import com.github.nekolr.peashooter.entity.mapper.DataSourceMapper;
 import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -53,7 +51,12 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
-    public Page<DataSource> findAllByPage(DataSource dataSource, Pageable pageable) {
+    public Page<DataSource> findAllByPage(GetDataSourceList cmd, Pageable pageable) {
+        DataSource dataSource = new DataSource();
+        String dataSourceName = cmd.dataSourceName();
+        if (StringUtils.hasText(dataSourceName)) {
+            dataSource.setName(dataSourceName);
+        }
         ExampleMatcher matcher = ExampleMatcher.matching()
                 .withNullHandler(ExampleMatcher.NullHandler.IGNORE)
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
