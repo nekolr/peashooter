@@ -21,7 +21,7 @@ public class TokenProvider {
 
     public TokenProvider(@Value("${jwt.period}") Duration period) {
         this.period = period;
-        this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+        this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     }
 
     public String createToken(String username) {
@@ -30,7 +30,7 @@ public class TokenProvider {
 
         return Jwts.builder()
                 .setSubject(username)
-                .signWith(secretKey, SignatureAlgorithm.HS512)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .setExpiration(expireDate)
                 .compact();
     }
