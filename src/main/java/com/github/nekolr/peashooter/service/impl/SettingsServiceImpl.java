@@ -41,6 +41,7 @@ public class SettingsServiceImpl implements ISettingsService {
 
         Basic basic = Settings.Basic.builder()
                 .mappingUrl(setting.mappingUrl())
+                .apiKey(setting.apiKey())
                 .build();
 
         settings.setBasic(basic);
