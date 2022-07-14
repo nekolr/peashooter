@@ -1,6 +1,5 @@
 package com.github.nekolr.peashooter.service.impl;
 
-import com.github.nekolr.peashooter.controller.req.datasource.AddDataSource;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.entity.mapper.DataSourceMapper;
 import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
@@ -16,13 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DataSourceServiceImpl implements IDataSourceService {
 
-    private final DataSourceMapper dataSourceMapper;
     private final RssRefreshJobManager jobManager;
     private final DataSourceRepository dataSourceRepository;
 
@@ -45,7 +44,12 @@ public class DataSourceServiceImpl implements IDataSourceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DataSource save(DataSource dataSource) {
-        return dataSourceRepository.save(dataSource);
+        dataSource = dataSourceRepository.save(dataSource);
+        if (Objects.nonNull(dataSource.getId())) {
+            jobManager.removeJob(String.valueOf(dataSource.getId()));
+        }
+        jobManager.addJob(dataSource.getId(), dataSource.getRefreshSeconds());
+        return dataSource;
     }
 
     @Override
@@ -54,13 +58,5 @@ public class DataSourceServiceImpl implements IDataSourceService {
                 .withNullHandler(ExampleMatcher.NullHandler.IGNORE)
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         return dataSourceRepository.findAll(Example.of(dataSource, matcher), pageable);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void add(AddDataSource addDataSource) {
-        DataSource dataSource = dataSourceMapper.toDomain(addDataSource);
-        this.save(dataSource);
-        jobManager.addJob(dataSource.getId(), dataSource.getRefreshSeconds());
     }
 }

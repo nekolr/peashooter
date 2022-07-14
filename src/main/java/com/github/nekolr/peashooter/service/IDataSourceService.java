@@ -1,6 +1,5 @@
 package com.github.nekolr.peashooter.service;
 
-import com.github.nekolr.peashooter.controller.req.datasource.AddDataSource;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;
@@ -24,7 +23,4 @@ public interface IDataSourceService {
     DataSource save(DataSource ds);
 
     Page<DataSource> findAllByPage(DataSource dataSource, Pageable pageable);
-
-    @CacheEvict(key = "'all'")
-    void add(AddDataSource addDataSource);
 }

@@ -1,13 +1,15 @@
 package com.github.nekolr.peashooter.controller;
 
-import com.github.nekolr.peashooter.controller.req.datasource.AddDataSource;
+import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
 import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/datasource")
@@ -16,9 +18,20 @@ public class DataSourceController {
 
     private final IDataSourceService dataSourceService;
 
-    @PostMapping("add")
-    public JsonBean<Void> add(@RequestBody AddDataSource addDataSource) {
-        dataSourceService.add(addDataSource);
+    @PostMapping("save")
+    public JsonBean<Void> save(@RequestBody DataSource dataSource) {
+        dataSourceService.save(dataSource);
         return JsonBean.ok();
+    }
+
+    @PostMapping("getList")
+    public JsonBean<Page<DataSource>> getDataSourceList(@RequestBody GetDataSourceList getList) {
+        DataSource dataSource = new DataSource();
+        String dataSourceName = getList.dataSourceName();
+        if (StringUtils.hasText(dataSourceName)) {
+            dataSource.setName(dataSourceName);
+        }
+        Pageable pageable = PageRequest.of(getList.pageNo() - 1, getList.pageSize());
+        return JsonBean.ok(dataSourceService.findAllByPage(dataSource, pageable));
     }
 }
