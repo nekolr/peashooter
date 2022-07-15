@@ -23,6 +23,12 @@ public class DataSourceController {
         return JsonBean.ok();
     }
 
+    @PostMapping("delete")
+    public JsonBean<Void> delete(@RequestParam("id") Long id) {
+        dataSourceService.removeById(id);
+        return JsonBean.ok();
+    }
+
     @PostMapping("getList")
     public JsonBean<Page<DataSource>> getDataSourceList(@RequestBody GetDataSourceList cmd) {
         Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());

@@ -32,6 +32,10 @@ public class DataSourceServiceImpl implements IDataSourceService {
     @Transactional(rollbackFor = Exception.class)
     public void removeById(Long id) {
         dataSourceRepository.deleteById(id);
+        boolean success = jobManager.removeJob(String.valueOf(id));
+        if (!success) {
+            throw new RuntimeException("删除任务失败");
+        }
     }
 
     @Override
