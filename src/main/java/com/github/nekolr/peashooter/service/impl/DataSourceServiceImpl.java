@@ -4,7 +4,10 @@ import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
+import com.github.nekolr.peashooter.rss.load.RssLoader;
+import com.github.nekolr.peashooter.rss.write.RssWriter;
 import com.github.nekolr.peashooter.service.IDataSourceService;
+import com.github.nekolr.peashooter.util.Md5Util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -15,11 +18,15 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.Objects;
 
+import static com.github.nekolr.peashooter.constant.Peashooter.getRssFilepath;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DataSourceServiceImpl implements IDataSourceService {
 
+    private final RssWriter rssWriter;
+    private final RssLoader rssLoader;
     private final RssRefreshJobManager jobManager;
     private final DataSourceRepository dataSourceRepository;
 
@@ -65,5 +72,24 @@ public class DataSourceServiceImpl implements IDataSourceService {
                 .withNullHandler(ExampleMatcher.NullHandler.IGNORE)
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         return dataSourceRepository.findAll(Example.of(dataSource, matcher), pageable);
+    }
+
+    @Override
+    public boolean refreshRss(Long id) {
+        boolean refreshed = false;
+        DataSource dataSource = this.getById(id);
+        if (Objects.nonNull(dataSource)) {
+            String xml = rssLoader.load(dataSource.getSourceUrl(), dataSource.getUseProxy());
+            if (Objects.nonNull(xml)) {
+                String sign = Md5Util.md5(xml);
+                if (!Objects.equals(sign, dataSource.getSignature())) {
+                    dataSource.setSignature(sign);
+                    this.save(dataSource);
+                    rssWriter.write(xml, getRssFilepath(id, false));
+                    refreshed = true;
+                }
+            }
+        }
+        return refreshed;
     }
 }

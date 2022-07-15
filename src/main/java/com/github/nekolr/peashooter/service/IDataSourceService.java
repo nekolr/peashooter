@@ -24,4 +24,7 @@ public interface IDataSourceService {
     DataSource save(DataSource ds);
 
     Page<DataSource> findAllByPage(GetDataSourceList cmd, Pageable pageable);
+
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
+    boolean refreshRss(Long id);
 }

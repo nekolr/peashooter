@@ -29,6 +29,12 @@ public class DataSourceController {
         return JsonBean.ok();
     }
 
+    @PostMapping("refreshRss")
+    public JsonBean<Void> refreshRss(@RequestParam("id") Long id) {
+        dataSourceService.refreshRss(id);
+        return JsonBean.ok();
+    }
+
     @PostMapping("getList")
     public JsonBean<Page<DataSource>> getDataSourceList(@RequestBody GetDataSourceList cmd) {
         Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
