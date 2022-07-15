@@ -59,7 +59,7 @@ public class SecurityConfiguration {
                 // 主页可以匿名访问
                 .antMatchers(HttpMethod.GET, "/").anonymous()
                 // 登录请求不拦截（如果登录请求头包含 Authorization: Bearer 任意字符，那么还是会进行校验）
-                .antMatchers(HttpMethod.POST, "/api/login").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
 
                 // 其他所有请求都要经过验证
                 .anyRequest().authenticated();
