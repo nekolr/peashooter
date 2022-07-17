@@ -4,7 +4,7 @@ import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.req.LoginUser;
 import com.github.nekolr.peashooter.service.IUserService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +21,7 @@ import java.util.Objects;
 
 @Slf4j
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AccessAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String API_KEY_PARAM = "apiKey";

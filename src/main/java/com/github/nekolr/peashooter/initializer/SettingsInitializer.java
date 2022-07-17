@@ -1,10 +1,11 @@
-package com.github.nekolr.peashooter.config;
+package com.github.nekolr.peashooter.initializer;
 
 import com.alibaba.fastjson2.JSON;
+import com.github.nekolr.peashooter.config.Settings;
+import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.util.RandomUtil;
 import jodd.io.FileUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 

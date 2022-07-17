@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.text.MessageFormat;
 import java.util.List;
 
+import static com.github.nekolr.peashooter.constant.Peashooter.API_KEY;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class SonarrClient implements SonarrApi {
     public Status getStatus() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_STATUS_URI));
-        request.query("apikey", apiKey);
+        request.query(API_KEY, apiKey);
         try {
             HttpResponse response = request.send();
             if (response.statusCode() != 200)
@@ -42,7 +44,7 @@ public class SonarrClient implements SonarrApi {
     public List<Queue> getQueueList() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_QUEUE_LIST_URI));
-        request.query("apikey", apiKey);
+        request.query(API_KEY, apiKey);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;
@@ -54,7 +56,7 @@ public class SonarrClient implements SonarrApi {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         String uri = MessageFormat.format(GET_SERIES_URI, id);
         HttpRequest request = HttpRequest.get(this.getUrl(uri));
-        request.query("apikey", apiKey);
+        request.query(API_KEY, apiKey);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;
@@ -65,16 +67,11 @@ public class SonarrClient implements SonarrApi {
     public List<Series> getSeriesList() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_SERIES_LIST_URI));
-        request.query("apikey", apiKey);
+        request.query(API_KEY, apiKey);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;
         return JSON.parseArray(response.bodyText(), Series.class);
-    }
-
-    @Override
-    public List<Series> refreshSeriesList() {
-        return this.getSeriesList();
     }
 
     private String getUrl(String uri) {

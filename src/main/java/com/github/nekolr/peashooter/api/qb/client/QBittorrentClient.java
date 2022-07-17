@@ -17,6 +17,12 @@ import org.springframework.stereotype.Component;
 public class QBittorrentClient implements QBittorrentApi {
 
     private final SettingsManager settingsManager;
+    private static final String COOKIE = "cookie";
+    private static final String COOKIE_VALUE_PREFIX = "SID=";
+    private static final String RENAME_TORRENT_URI_PARAM_HASH = "hash";
+    private static final String RENAME_TORRENT_URI_PARAM_NAME = "name";
+    private static final String LOGIN_URI_FORM_PARAM_USERNAME = "username";
+    private static final String LOGIN_URI_FORM_PARAM_PASSWORD = "password";
 
     @Override
     public SID login() {
@@ -24,8 +30,8 @@ public class QBittorrentClient implements QBittorrentApi {
         String username = settingsManager.get().getQbittorrent().getUsername();
         String password = settingsManager.get().getQbittorrent().getPassword();
         HttpRequest request = HttpRequest.post(url);
-        request.form("username", username);
-        request.form("password", password);
+        request.form(LOGIN_URI_FORM_PARAM_USERNAME, username);
+        request.form(LOGIN_URI_FORM_PARAM_PASSWORD, password);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;
@@ -38,7 +44,7 @@ public class QBittorrentClient implements QBittorrentApi {
         String url = settingsManager.get().getQbittorrent().getUrl() + APP_VERSION_URI;
         HttpRequest request = HttpRequest.get(url);
         try {
-            request.header("Cookie", "SID=" + this.login().sid());
+            request.header(COOKIE, COOKIE_VALUE_PREFIX + this.login().sid());
             HttpResponse response = request.send();
             if (response.statusCode() != 200)
                 return null;
@@ -53,9 +59,9 @@ public class QBittorrentClient implements QBittorrentApi {
     public boolean renameTorrent(String hash, String name) {
         String url = settingsManager.get().getQbittorrent().getUrl() + RENAME_TORRENT_URI;
         HttpRequest request = HttpRequest.post(url);
-        request.header("Cookie", "SID=" + this.login().sid());
-        request.form("hash", hash);
-        request.form("name", name);
+        request.header(COOKIE, COOKIE_VALUE_PREFIX + this.login().sid());
+        request.form(RENAME_TORRENT_URI_PARAM_HASH, hash);
+        request.form(RENAME_TORRENT_URI_PARAM_NAME, name);
         HttpResponse response = request.send();
         return response.statusCode() == 200;
     }

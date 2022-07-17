@@ -15,6 +15,7 @@ public interface Peashooter {
     String LEFT_SLASH = "/";
     String CHARSET = "utf-8";
     String XML_SUFFIX = "xml";
+    String API_KEY = "apiKey";
     String MI_KAN_URL = "https://mikanani.me";
 
     /**

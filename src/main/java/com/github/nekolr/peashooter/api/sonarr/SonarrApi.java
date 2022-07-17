@@ -22,9 +22,5 @@ public interface SonarrApi {
     @Cacheable(key = "#p0")
     Series getSeries(String id);
 
-    @Cacheable(key = "'series'")
     List<Series> getSeriesList();
-
-    @Caching(evict = {@CacheEvict(key = "'series'", beforeInvocation = true)}, put = {@CachePut(key = "'series'")})
-    List<Series> refreshSeriesList();
 }

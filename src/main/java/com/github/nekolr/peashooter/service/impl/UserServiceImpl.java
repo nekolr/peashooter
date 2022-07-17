@@ -7,13 +7,13 @@ import com.github.nekolr.peashooter.controller.rsp.UserInfo;
 import com.github.nekolr.peashooter.security.MyContextHolder;
 import com.github.nekolr.peashooter.security.TokenProvider;
 import com.github.nekolr.peashooter.service.IUserService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
 
     private final UserSettings userSettings;
