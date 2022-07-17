@@ -1,6 +1,7 @@
 package com.github.nekolr.peashooter.service;
 
-import com.github.nekolr.peashooter.controller.req.group.AddGroup;
+import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
+import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
 import com.github.nekolr.peashooter.entity.domain.Group;
 import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;
@@ -23,10 +24,10 @@ public interface IGroupService {
     @CacheEvict(key = "'all'")
     Group save(Group group);
 
-    Page<Group> findAllByPage(Group group, Pageable pageable);
+    Page<Group> findAllByPage(GetGroupList cmd, Pageable pageable);
 
     @CacheEvict(key = "'all'")
-    void add(AddGroup addGroup);
+    void saveGroup(SaveGroup saveGroup);
 
     void refreshRss(Long groupId);
 

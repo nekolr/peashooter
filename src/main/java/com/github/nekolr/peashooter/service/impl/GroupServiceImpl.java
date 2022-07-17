@@ -1,7 +1,10 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.github.nekolr.peashooter.controller.req.group.AddGroup;
+import com.github.nekolr.peashooter.config.SettingsManager;
+import com.github.nekolr.peashooter.constant.Peashooter;
+import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
+import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
 import com.github.nekolr.peashooter.entity.domain.Group;
 import com.github.nekolr.peashooter.entity.domain.GroupDataSource;
 import com.github.nekolr.peashooter.entity.mapper.GroupMapper;
@@ -46,6 +49,7 @@ public class GroupServiceImpl implements IGroupService {
     private final GroupMapper groupMapper;
     private final RssConvertor rssConvertor;
     private final GroupRepository groupRepository;
+    private final SettingsManager settingsManager;
     private final IGroupDataSourceService groupDataSourceService;
     private final GroupDataSourceRepository groupDataSourceRepository;
 
@@ -72,26 +76,42 @@ public class GroupServiceImpl implements IGroupService {
     }
 
     @Override
-    public Page<Group> findAllByPage(Group group, Pageable pageable) {
+    public Page<Group> findAllByPage(GetGroupList cmd, Pageable pageable) {
+        Group group = new Group();
+        String groupName = cmd.groupName();
+        if (StringUtils.hasText(groupName)) {
+            group.setName(groupName);
+        }
         ExampleMatcher matcher = ExampleMatcher.matching()
                 .withNullHandler(ExampleMatcher.NullHandler.IGNORE)
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
-        return groupRepository.findAll(Example.of(group, matcher), pageable);
+        Page<Group> page = groupRepository.findAll(Example.of(group, matcher), pageable);
+        List<Group> list = page.getContent();
+        list.stream().forEach(e -> e.setRssLink(Peashooter.getGroupLink(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
+
+        return page;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void add(AddGroup addGroup) {
-        Group group = groupMapper.toDomain(addGroup);
-        if (!CollectionUtils.isEmpty(addGroup.matchers())) {
-            group.setMatchersJson(JSON.toJSONString(addGroup.matchers()));
+    public void saveGroup(SaveGroup saveGroup) {
+        Group group = groupMapper.toDomain(saveGroup);
+
+        if (!CollectionUtils.isEmpty(saveGroup.matchers())) {
+            group.setMatchersJson(JSON.toJSONString(saveGroup.matchers()));
         }
         this.save(group);
-        String datasourceIds = addGroup.datasourceIds();
+
+        if (Objects.nonNull(group.getId())) {
+            List<GroupDataSource> needDelList = groupDataSourceRepository.findByGroupId(group.getId());
+            groupDataSourceRepository.deleteAllInBatch(needDelList);
+        }
+
+        String datasourceIds = saveGroup.datasourceIds();
         if (StringUtils.hasText(datasourceIds)) {
-            String[] dsIdArray = datasourceIds.split(",");
-            if (dsIdArray.length > 0) {
-                Arrays.stream(dsIdArray).forEach(id -> {
+            String[] datasourceIdArray = datasourceIds.split(",");
+            if (datasourceIdArray.length > 0) {
+                Arrays.stream(datasourceIdArray).forEach(id -> {
                     GroupDataSource groupDataSource = new GroupDataSource();
                     groupDataSource.setGroupId(group.getId());
                     groupDataSource.setDatasourceId(Long.valueOf(id));

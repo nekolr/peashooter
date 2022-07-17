@@ -58,4 +58,10 @@ public class Group {
      */
     @Column(name = "matchers_json", columnDefinition = "text")
     private String matchersJson;
+
+    /**
+     * RSS 订阅地址
+     */
+    @Transient
+    private String rssLink;
 }

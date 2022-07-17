@@ -1,9 +1,14 @@
 package com.github.nekolr.peashooter.controller;
 
-import com.github.nekolr.peashooter.controller.req.group.AddGroup;
+import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
+import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
 import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.domain.Group;
 import com.github.nekolr.peashooter.service.IGroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +26,9 @@ import static com.github.nekolr.peashooter.constant.Peashooter.CHARSET;
 public class GroupController {
     private final IGroupService groupService;
 
-    @PostMapping("add")
-    public JsonBean<Void> add(@RequestBody AddGroup addGroup) {
-        groupService.add(addGroup);
+    @PostMapping("save")
+    public JsonBean<Void> save(@RequestBody SaveGroup saveGroup) {
+        groupService.saveGroup(saveGroup);
         return JsonBean.ok();
     }
 
@@ -37,5 +42,11 @@ public class GroupController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @PostMapping("getList")
+    public JsonBean<Page<Group>> getGroupList(@RequestBody GetGroupList cmd) {
+        Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
+        return JsonBean.ok(groupService.findAllByPage(cmd, pageable));
     }
 }
