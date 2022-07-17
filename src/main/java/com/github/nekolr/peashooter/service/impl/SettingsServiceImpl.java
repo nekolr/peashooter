@@ -102,4 +102,17 @@ public class SettingsServiceImpl implements ISettingsService {
     public Settings get() {
         return settingsManager.get();
     }
+
+    @Override
+    public void setTheMovieDb(SetTheMovieDb setting) {
+        Settings settings = settingsManager.get();
+
+        TheMovieDb theMovieDb = Settings.TheMovieDb.builder()
+                .apiKey(setting.apiKey())
+                .useProxy(setting.useProxy())
+                .build();
+
+        settings.setTheMovieDb(theMovieDb);
+        settingsManager.update(settings);
+    }
 }

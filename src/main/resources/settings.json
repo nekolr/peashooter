@@ -16,5 +16,9 @@
     "apiKey":"123",
     "syncSeconds":5,
     "url":"http://localhost:9000"
+  },
+  "theMovieDb":{
+    "apiKey":"123",
+    "useProxy": true
   }
 }

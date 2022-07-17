@@ -10,6 +10,7 @@ public class Settings {
     private Sonarr sonarr;
     private QBitTorrent qbittorrent;
     private HttpProxy httpProxy;
+    private TheMovieDb theMovieDb;
 
     @Data
     @Builder
@@ -39,6 +40,13 @@ public class Settings {
     public static class HttpProxy {
         private String ip;
         private Integer port;
+    }
+
+    @Data
+    @Builder
+    public static class TheMovieDb {
+        private String apiKey;
+        private Boolean useProxy;
     }
 
 }

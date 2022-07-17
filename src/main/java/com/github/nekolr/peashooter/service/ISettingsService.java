@@ -20,4 +20,6 @@ public interface ISettingsService {
     String refreshApiKey();
 
     Settings get();
+
+    void setTheMovieDb(SetTheMovieDb setting);
 }

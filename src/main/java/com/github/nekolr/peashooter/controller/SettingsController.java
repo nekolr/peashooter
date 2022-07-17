@@ -38,6 +38,12 @@ public class SettingsController {
         return JsonBean.ok();
     }
 
+    @PostMapping("themoviedb")
+    public JsonBean<Void> setTheMovieDb(@RequestBody SetTheMovieDb setting) {
+        settingsService.setTheMovieDb(setting);
+        return JsonBean.ok();
+    }
+
     @GetMapping("test-sonarr")
     public JsonBean<Boolean> testSonarr() {
         return JsonBean.ok(settingsService.testSonarr());
