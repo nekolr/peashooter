@@ -40,6 +40,20 @@ public class SonarrServiceImpl implements ISonarrService {
         if (CollectionUtils.isEmpty(seriesList)) {
             return Collections.emptyList();
         } else {
+            Stream<SeriesZhCN> stream = seriesList.stream()
+                    .filter(series -> this.hasSeriesZhCN(series.id()))
+                    .map(series -> sonarrSeries.get(series.id()))
+                    .sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed());
+            return stream.collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public List<SeriesZhCN> refreshSeriesZhCNList() {
+        List<Series> seriesList = sonarrApi.getSeriesList();
+        if (CollectionUtils.isEmpty(seriesList)) {
+            return Collections.emptyList();
+        } else {
             Stream<SeriesZhCN> stream = seriesList.stream().map(series -> {
                 Long seriesId = series.id();
                 if (!this.hasSeriesZhCN(seriesId)) {
