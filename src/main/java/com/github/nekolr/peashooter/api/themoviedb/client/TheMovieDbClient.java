@@ -24,19 +24,33 @@ public class TheMovieDbClient implements TheMovieDbApi {
     private final SettingsManager settingsManager;
     private static final String DEFAULT_LANGUAGE = "zh-CN";
     private static final String DEFAULT_EXTERNAL_SOURCE = "imdb_id";
+    private static final String TVDB_EXTERNAL_SOURCE = "tvdb_id";
     private static final String FIND_SERIES_URI_PARAM_API_KEY = "api_key";
     private static final String FIND_SERIES_URI_PARAM_LANGUAGE = "language";
     private static final String FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE = "external_source";
 
     @Override
     public TvResult findByImdbId(String imdbId) {
+        return this.getTvResult(imdbId, DEFAULT_EXTERNAL_SOURCE);
+    }
+
+    @Override
+    public TvResult findByTvdbId(String tvdbId) {
+        return this.getTvResult(tvdbId, TVDB_EXTERNAL_SOURCE);
+    }
+
+    private TvResult getTvResult(String id, String externalSource) {
         String apiKey = settingsManager.get().getTheMovieDb().getApiKey();
         Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
-        String uri = MessageFormat.format(FIND_SERIES_URI, imdbId);
+        String uri = MessageFormat.format(FIND_SERIES_URI, id);
         HttpRequest request = HttpRequest.get(this.getUrl(uri));
         request.query(FIND_SERIES_URI_PARAM_API_KEY, apiKey);
-        request.query(FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE, DEFAULT_EXTERNAL_SOURCE);
+        request.query(FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE, externalSource);
         request.query(FIND_SERIES_URI_PARAM_LANGUAGE, DEFAULT_LANGUAGE);
+        return this.doSend(request, useProxy);
+    }
+
+    private TvResult doSend(HttpRequest request, boolean useProxy) {
         if (useProxy) {
             this.setupProxy(request);
         }

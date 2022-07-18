@@ -22,8 +22,8 @@ public class SonarrController {
         return JsonBean.ok(sonarrService.getSeriesZhCNList());
     }
 
-    @GetMapping("refresh")
-    public JsonBean<List<Series>> refresh() {
+    @GetMapping("refresh-series")
+    public JsonBean<List<Series>> refreshSeries() {
         return JsonBean.ok(sonarrService.refreshSeriesZhCNList());
     }
 }

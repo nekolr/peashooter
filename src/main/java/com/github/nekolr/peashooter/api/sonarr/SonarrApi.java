@@ -3,11 +3,9 @@ package com.github.nekolr.peashooter.api.sonarr;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
-import org.springframework.cache.annotation.*;
 
 import java.util.List;
 
-@CacheConfig(cacheNames = "sonarr")
 public interface SonarrApi {
 
     String GET_QUEUE_LIST_URI = "/api/queue";
@@ -19,7 +17,6 @@ public interface SonarrApi {
 
     List<Queue> getQueueList();
 
-    @Cacheable(key = "#p0")
     Series getSeries(String id);
 
     List<Series> getSeriesList();

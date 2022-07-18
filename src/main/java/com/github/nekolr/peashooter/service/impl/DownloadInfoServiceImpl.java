@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.entity.domain.DownloadInfo;
-import com.github.nekolr.peashooter.job.rename.RenameTorrentJobInitializer;
+import com.github.nekolr.peashooter.initializer.RenameTorrentJobInitializer;
 import com.github.nekolr.peashooter.repository.DownloadInfoRepository;
 import com.github.nekolr.peashooter.service.IDownloadInfoService;
 import lombok.RequiredArgsConstructor;

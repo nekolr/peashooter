@@ -9,4 +9,6 @@ public interface TheMovieDbApi {
     String FIND_SERIES_URI = "/3/find/{0}";
 
     TvResult findByImdbId(String imdbId);
+
+    TvResult findByTvdbId(String tvdbId);
 }

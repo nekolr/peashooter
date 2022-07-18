@@ -1,5 +1,6 @@
-package com.github.nekolr.peashooter.job.rename;
+package com.github.nekolr.peashooter.initializer;
 
+import com.github.nekolr.peashooter.job.rename.RenameTorrentJobManager;
 import com.github.nekolr.peashooter.service.ISettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +24,17 @@ public class RenameTorrentJobInitializer implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        if (settingsService.testSonarr() && settingsService.testQb()) {
-            this.initRenameTorrentJob();
-        }
+        this.initRenameTorrentJob();
     }
 
     public void initRenameTorrentJob() {
-        log.info("RenameTorrentJob start");
-        jobManager.addJob(RENAME_TORRENT_JOB_INTERVAL_SECONDS);
-        this.setInitialized(true);
+        if (!settingsService.testSonarr() || !settingsService.testQb()) {
+            log.warn("没有配置 sonarr 和 qbittorrent");
+        } else {
+            log.info("种子文件重命名任务启动");
+            jobManager.addJob(RENAME_TORRENT_JOB_INTERVAL_SECONDS);
+            this.setInitialized(true);
+        }
     }
 
     public void setInitialized(boolean initialized) {

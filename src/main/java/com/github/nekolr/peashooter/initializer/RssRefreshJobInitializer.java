@@ -1,7 +1,8 @@
-package com.github.nekolr.peashooter.job.datasource;
+package com.github.nekolr.peashooter.initializer;
 
 
 import com.github.nekolr.peashooter.entity.domain.DataSource;
+import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;

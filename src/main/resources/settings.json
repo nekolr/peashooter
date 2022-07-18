@@ -1,6 +1,6 @@
 {
   "basic":{
-    "apiKey": "123",
+    "apiKey": "",
     "mappingUrl":"http://172.17.0.1:8962"
   },
   "httpProxy":{
@@ -13,12 +13,12 @@
     "username":"admin"
   },
   "sonarr":{
-    "apiKey":"123",
-    "syncSeconds":5,
+    "apiKey":"",
+    "syncSeconds":60,
     "url":"http://localhost:9000"
   },
   "theMovieDb":{
-    "apiKey":"123",
+    "apiKey":"",
     "useProxy": true
   }
 }

@@ -7,6 +7,7 @@ import com.github.nekolr.peashooter.api.themoviedb.rsp.FindSeries.TvResult;
 import com.github.nekolr.peashooter.entity.SeriesZhCN;
 import com.github.nekolr.peashooter.service.ISonarrService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SonarrServiceImpl implements ISonarrService {
@@ -50,6 +52,7 @@ public class SonarrServiceImpl implements ISonarrService {
 
     @Override
     public List<SeriesZhCN> refreshSeriesZhCNList() {
+        log.info("开始刷新 sonarr 的剧集中文信息");
         List<Series> seriesList = sonarrApi.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
             return Collections.emptyList();
@@ -57,9 +60,19 @@ public class SonarrServiceImpl implements ISonarrService {
             Stream<SeriesZhCN> stream = seriesList.stream().map(series -> {
                 Long seriesId = series.id();
                 if (!this.hasSeriesZhCN(seriesId)) {
-                    TvResult tvResult = theMovieDbApi.findByImdbId(series.imdbId());
+                    log.info("原始剧集信息：{}", series);
+                    TvResult tvResult = null;
+                    if (Objects.nonNull(series.imdbId())) {
+                        tvResult = theMovieDbApi.findByImdbId(series.imdbId());
+                    } else if (Objects.nonNull(series.tvdbId())) {
+                        tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
+                    }
                     if (Objects.nonNull(tvResult)) {
+                        log.info("获取到对应的中文剧集信息：{}", tvResult);
                         this.setSeriesZhCN(seriesId, new SeriesZhCN(seriesId, tvResult.name(), series.title()));
+                    } else {
+                        log.warn("没有获取到剧集 {} 对应的中文信息", series.title());
+                        this.setSeriesZhCN(seriesId, new SeriesZhCN(seriesId, series.title(), series.title()));
                     }
                 }
                 return sonarrSeries.get(seriesId);
