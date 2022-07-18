@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @DependsOn("settingsInitializer")
@@ -33,7 +34,10 @@ public class SonarrSeriesInitializer implements InitializingBean {
         if (!CollectionUtils.isEmpty(seriesList)) {
             seriesList.forEach(series -> {
                 TvResult tvResult = theMovieDbApi.findByImdbId(series.imdbId());
-                sonarrService.setSeriesZhCN(series.id(), new SeriesZhCN(series.id(), tvResult.name(), series.title()));
+                if (Objects.nonNull(tvResult)) {
+                    Long seriesId = series.id();
+                    sonarrService.setSeriesZhCN(seriesId, new SeriesZhCN(seriesId, tvResult.name(), series.title()));
+                }
             });
         }
     }

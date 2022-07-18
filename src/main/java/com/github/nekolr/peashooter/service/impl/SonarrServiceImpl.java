@@ -10,12 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -38,16 +36,11 @@ public class SonarrServiceImpl implements ISonarrService {
 
     @Override
     public List<SeriesZhCN> getSeriesZhCNList() {
-        return sonarrSeries.values().stream()
-                .sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed())
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<SeriesZhCN> refreshSeriesZhCNList() {
         List<Series> seriesList = sonarrApi.getSeriesList();
-        if (!CollectionUtils.isEmpty(seriesList)) {
-            for (Series series : seriesList) {
+        if (CollectionUtils.isEmpty(seriesList)) {
+            return Collections.emptyList();
+        } else {
+            Stream<SeriesZhCN> stream = seriesList.stream().map(series -> {
                 Long seriesId = series.id();
                 if (!this.hasSeriesZhCN(seriesId)) {
                     TvResult tvResult = theMovieDbApi.findByImdbId(series.imdbId());
@@ -55,8 +48,10 @@ public class SonarrServiceImpl implements ISonarrService {
                         this.setSeriesZhCN(seriesId, new SeriesZhCN(seriesId, tvResult.name(), series.title()));
                     }
                 }
-            }
+                return sonarrSeries.get(seriesId);
+            }).sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed());
+
+            return stream.collect(Collectors.toList());
         }
-        return this.getSeriesZhCNList();
     }
 }

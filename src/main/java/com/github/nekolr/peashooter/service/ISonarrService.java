@@ -12,6 +12,4 @@ public interface ISonarrService {
     boolean hasSeriesZhCN(Long id);
 
     List<SeriesZhCN> getSeriesZhCNList();
-
-    List<SeriesZhCN> refreshSeriesZhCNList();
 }
