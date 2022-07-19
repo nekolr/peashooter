@@ -55,6 +55,7 @@ public class SonarrServiceImpl implements ISonarrService {
         log.info("开始刷新 sonarr 的剧集中文信息");
         List<Series> seriesList = sonarrApi.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
+            log.info("没有获取到 sonarr 的剧集信息");
             return Collections.emptyList();
         } else {
             Stream<SeriesZhCN> stream = seriesList.stream().map(series -> {
@@ -78,7 +79,9 @@ public class SonarrServiceImpl implements ISonarrService {
                 return sonarrSeries.get(seriesId);
             }).sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed());
 
-            return stream.collect(Collectors.toList());
+            List<SeriesZhCN> result = stream.collect(Collectors.toList());
+            log.info("刷新完毕");
+            return result;
         }
     }
 }
