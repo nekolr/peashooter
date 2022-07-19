@@ -1,4 +1,4 @@
 package com.github.nekolr.peashooter.controller.rsp;
 
-public record ItemTitle(String title) {
+public record ItemTitle(Integer id, String title) {
 }

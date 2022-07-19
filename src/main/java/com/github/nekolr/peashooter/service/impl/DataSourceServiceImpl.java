@@ -19,11 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.getRssFilepath;
 
@@ -109,8 +108,12 @@ public class DataSourceServiceImpl implements IDataSourceService {
             String xml = rssLoader.loadFromFile(getRssFilepath(id, false));
             SyndFeed feed = FeedUtils.getFeed(xml);
             List<SyndEntry> entries = FeedUtils.getEntries(feed);
-            Stream<ItemTitle> stream = entries.stream().map(entry -> new ItemTitle(FeedUtils.getTitle(entry)));
-            return stream.collect(Collectors.toList());
+            List<ItemTitle> result = new ArrayList<>(entries.size());
+            for (int i = 0; i < entries.size(); i++) {
+                SyndEntry entry = entries.get(i);
+                result.add(new ItemTitle(i + 1, FeedUtils.getTitle(entry)));
+            }
+            return result;
         }
     }
 }
