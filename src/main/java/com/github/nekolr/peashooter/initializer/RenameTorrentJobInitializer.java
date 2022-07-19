@@ -29,7 +29,7 @@ public class RenameTorrentJobInitializer implements InitializingBean {
 
     public void initRenameTorrentJob() {
         if (!settingsService.testSonarr() || !settingsService.testQb()) {
-            log.warn("没有配置 sonarr 和 qbittorrent");
+            log.warn("sonarr 或 qbittorrent 连接失败");
         } else {
             log.info("种子文件重命名任务启动");
             jobManager.addJob(RENAME_TORRENT_JOB_INTERVAL_SECONDS);
