@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.controller;
 
-import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.SeriesZhCN;
 import com.github.nekolr.peashooter.service.ISonarrService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +18,12 @@ public class SonarrController {
     private final ISonarrService sonarrService;
 
     @GetMapping("series")
-    public JsonBean<List<Series>> series() {
+    public JsonBean<List<SeriesZhCN>> series() {
         return JsonBean.ok(sonarrService.getSeriesZhCNList());
     }
 
     @GetMapping("refresh-series")
-    public JsonBean<List<Series>> refreshSeries() {
+    public JsonBean<List<SeriesZhCN>> refreshSeries() {
         return JsonBean.ok(sonarrService.refreshSeriesZhCNList());
     }
 }

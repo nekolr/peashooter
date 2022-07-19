@@ -40,4 +40,10 @@ public class DataSourceController {
         Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
         return JsonBean.ok(dataSourceService.findAllByPage(cmd, pageable));
     }
+
+    @GetMapping("getAll")
+    public JsonBean<Page<DataSource>> getAll() {
+        return JsonBean.ok(dataSourceService.findAll());
+    }
+
 }
