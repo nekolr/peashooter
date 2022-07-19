@@ -1,6 +1,7 @@
 package com.github.nekolr.peashooter.service;
 
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
+import com.github.nekolr.peashooter.controller.rsp.ItemTitle;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;
@@ -8,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-@CacheConfig(cacheNames = "datasource")
+@CacheConfig(cacheNames = "dataSource")
 public interface IDataSourceService {
 
     @Cacheable(key = "'all'")
@@ -27,4 +28,6 @@ public interface IDataSourceService {
 
     @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     boolean refreshRss(Long id);
+
+    List<ItemTitle> getItemTitleList(Long id);
 }

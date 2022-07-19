@@ -6,7 +6,7 @@ import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 
-@CacheConfig(cacheNames = "groupDatasource")
+@CacheConfig(cacheNames = "groupDataSource")
 public interface IGroupDataSourceService {
 
     @CacheEvict(allEntries = true)

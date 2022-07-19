@@ -1,6 +1,7 @@
 package com.github.nekolr.peashooter.controller;
 
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
+import com.github.nekolr.peashooter.controller.rsp.ItemTitle;
 import com.github.nekolr.peashooter.entity.JsonBean;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.service.IDataSourceService;
@@ -10,8 +11,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("api/datasource")
+@RequestMapping("api/dataSource")
 @RequiredArgsConstructor
 public class DataSourceController {
 
@@ -42,8 +45,13 @@ public class DataSourceController {
     }
 
     @GetMapping("getAll")
-    public JsonBean<Page<DataSource>> getAll() {
+    public JsonBean<List<DataSource>> getAll() {
         return JsonBean.ok(dataSourceService.findAll());
+    }
+
+    @GetMapping("getItemTitles")
+    public JsonBean<List<ItemTitle>> getItemTitleList(@RequestParam("id") Long id) {
+        return JsonBean.ok(dataSourceService.getItemTitleList(id));
     }
 
 }

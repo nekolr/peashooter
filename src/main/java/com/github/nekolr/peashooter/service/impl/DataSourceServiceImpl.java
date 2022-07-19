@@ -1,13 +1,17 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
+import com.github.nekolr.peashooter.controller.rsp.ItemTitle;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
 import com.github.nekolr.peashooter.rss.load.RssLoader;
 import com.github.nekolr.peashooter.rss.write.RssWriter;
 import com.github.nekolr.peashooter.service.IDataSourceService;
+import com.github.nekolr.peashooter.util.FeedUtils;
 import com.github.nekolr.peashooter.util.Md5Util;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -15,8 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.getRssFilepath;
 
@@ -91,5 +98,19 @@ public class DataSourceServiceImpl implements IDataSourceService {
             }
         }
         return refreshed;
+    }
+
+    @Override
+    public List<ItemTitle> getItemTitleList(Long id) {
+        DataSource dataSource = this.getById(id);
+        if (Objects.isNull(dataSource)) {
+            return Collections.emptyList();
+        } else {
+            String xml = rssLoader.loadFromFile(getRssFilepath(id, false));
+            SyndFeed feed = FeedUtils.getFeed(xml);
+            List<SyndEntry> entries = FeedUtils.getEntries(feed);
+            Stream<ItemTitle> stream = entries.stream().map(entry -> new ItemTitle(FeedUtils.getTitle(entry)));
+            return stream.collect(Collectors.toList());
+        }
     }
 }
