@@ -31,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.getRssFilepath;
@@ -78,6 +75,7 @@ public class GroupServiceImpl implements IGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Group save(Group group) {
+        group.setUpdateTime(new Date());
         return groupRepository.save(group);
     }
 

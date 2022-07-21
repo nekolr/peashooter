@@ -36,7 +36,6 @@ public class Group {
      * 修改时间
      */
     @Column(name = "update_time")
-    @ColumnDefault("CURRENT_TIMESTAMP()")
     private Date updateTime;
 
     /**
