@@ -97,8 +97,8 @@ public class RssConvertorImpl implements RssConvertor {
                 Date pubDate = this.resolvePubDate(entry, link);
 
                 List<SyndEnclosure> enclosures = FeedUtils.getEnclosures(entry);
+                Integer season = matcher.season();
                 SyndEnclosure first = enclosures.get(0);
-                String season = matcher.season();
                 String referenceId = ctx.referenceId();
                 String url = this.getTorrentLink(mappingUrl, first.getUrl(), epTitle, episodeNum, season, referenceId);
 
@@ -134,15 +134,14 @@ public class RssConvertorImpl implements RssConvertor {
         }
     }
 
-    private String epTitle(String seriesTitle, String season, String episodeNum, String quality, String language) {
+    private String epTitle(String seriesTitle, Integer season, String episodeNum, String quality, String language) {
         String epNum = FillUpZeroUtil.fill(episodeNum);
-        String seasonNum = FillUpZeroUtil.fill(season);
         String epTitle = Peashooter.EPISODE_TITLE_PREFIX + epNum;
-        return MessageFormat.format(EPISODE_TITLE_TEMPLATE, seriesTitle, seasonNum, epNum, epTitle, language, quality);
+        return MessageFormat.format(EPISODE_TITLE_TEMPLATE, seriesTitle, season, epNum, epTitle, language, quality);
     }
 
     private String getTorrentLink(String mappingUrl, String url, String title,
-                                  String episode, String season, String series) {
+                                  String episode, Integer season, String series) {
         try {
             title = URLEncoder.encode(title, CHARSET);
             return new StringBuilder(mappingUrl)

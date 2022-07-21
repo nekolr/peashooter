@@ -9,6 +9,7 @@ public interface Peashooter {
      */
     String DOT = ".";
     String AND = "&";
+    String API = "api";
     String EQUALS = "=";
     String QUESTION = "?";
     String GROUP = "group";
@@ -134,6 +135,6 @@ public interface Peashooter {
     }
 
     static String getGroupLink(String mappingUrl, Long id) {
-        return mappingUrl + LEFT_SLASH + GROUP + LEFT_SLASH + id + DOT + XML_SUFFIX;
+        return mappingUrl + LEFT_SLASH + API + LEFT_SLASH + GROUP + LEFT_SLASH + id + DOT + XML_SUFFIX;
     }
 }

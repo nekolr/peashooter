@@ -38,6 +38,7 @@ public class GroupController {
         try {
             OutputStream out = resp.getOutputStream();
             resp.setContentType(MediaType.APPLICATION_RSS_XML_VALUE);
+            resp.setCharacterEncoding(CHARSET);
             StreamUtils.copy(rss, Charset.forName(CHARSET), out);
         } catch (IOException e) {
             throw new RuntimeException(e);

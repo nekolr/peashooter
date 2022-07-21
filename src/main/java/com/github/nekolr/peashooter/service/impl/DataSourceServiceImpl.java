@@ -133,6 +133,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
         }
         int count = 0;
         Matcher matcher = cmd.matcher();
+        Integer season = matcher.season();
         Pattern pattern = Pattern.compile(matcher.regexp());
         List<MatchResult> matchResultList = new ArrayList<>();
         for (ItemTitle itemTitle : itemTitles) {
@@ -140,10 +141,9 @@ public class DataSourceServiceImpl implements IDataSourceService {
             if (m.find(matcher.offset())) {
                 String episodeNum = m.group(EPISODE_NUM_GROUP_NAME);
                 String epNum = FillUpZeroUtil.fill(episodeNum);
-                String seasonNum = FillUpZeroUtil.fill(matcher.season());
                 String epTitle = EPISODE_TITLE_PREFIX + epNum;
                 Format format = new MessageFormat(EPISODE_TITLE_TEMPLATE);
-                String[] args = new String[]{cmd.series(), seasonNum, epNum, epTitle, cmd.language(), cmd.quality()};
+                Object[] args = new Object[]{cmd.series(), season, epNum, epTitle, cmd.language(), cmd.quality()};
                 String newTitle = format.format(args);
                 matchResultList.add(new MatchResult(++count, itemTitle.title(), newTitle, epNum));
             }
