@@ -9,9 +9,9 @@ import java.util.List;
 @CacheConfig(cacheNames = "series")
 public interface ISonarrService {
 
-    void setSeriesZhCN(Long id, SeriesZhCN series);
+    void setSeriesZhCN(String id, SeriesZhCN series);
 
-    boolean hasSeriesZhCN(Long id);
+    boolean hasSeriesZhCN(String id);
 
     @Cacheable(key = "'all'")
     List<SeriesZhCN> getSeriesZhCNList();

@@ -7,7 +7,7 @@ import java.util.List;
 public record SaveGroup(Long id,
                         String name,
                         String referenceId,
-                        String[] dataSourceIds,
+                        Long[] dataSourceIds,
                         String quality,
                         String language,
                         List<Matcher> matchers) {

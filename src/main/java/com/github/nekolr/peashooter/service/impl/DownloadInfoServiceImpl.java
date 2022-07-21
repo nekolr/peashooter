@@ -42,7 +42,7 @@ public class DownloadInfoServiceImpl implements IDownloadInfoService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void onDownload(Long series, String title, Integer season, Integer episode) {
+    public void onDownload(String series, String title, Integer season, Integer episode) {
         DownloadInfo info = new DownloadInfo(series, title, season, episode);
         this.save(info);
         if (!initializer.isInitialized()) {

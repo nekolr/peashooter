@@ -21,5 +21,5 @@ public interface IDownloadInfoService {
     DownloadInfo save(DownloadInfo info);
 
     @CacheEvict(key = "'all'")
-    void onDownload(Long series, String title, Integer season, Integer episode);
+    void onDownload(String series, String title, Integer season, Integer episode);
 }

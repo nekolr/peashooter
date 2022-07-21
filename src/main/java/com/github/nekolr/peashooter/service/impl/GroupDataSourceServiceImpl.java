@@ -42,4 +42,9 @@ public class GroupDataSourceServiceImpl implements IGroupDataSourceService {
     public List<GroupDataSource> getByDatasourceId(Long datasourceId) {
         return groupDataSourceRepository.findByDatasourceId(datasourceId);
     }
+
+    @Override
+    public void deleteList(List<GroupDataSource> gds) {
+        groupDataSourceRepository.deleteAllInBatch(gds);
+    }
 }

@@ -21,7 +21,7 @@ public class DownloadInfo {
     /**
      * 连续剧名称
      */
-    private Long series;
+    private String series;
 
     /**
      * 集的标题
@@ -38,7 +38,7 @@ public class DownloadInfo {
      */
     private Integer episode;
 
-    public DownloadInfo(Long series, String title, Integer season, Integer episode) {
+    public DownloadInfo(String series, String title, Integer season, Integer episode) {
         this.series = series;
         this.title = title;
         this.season = season;

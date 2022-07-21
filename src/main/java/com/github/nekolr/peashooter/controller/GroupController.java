@@ -49,4 +49,21 @@ public class GroupController {
         Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
         return JsonBean.ok(groupService.findAllByPage(cmd, pageable));
     }
+
+    @GetMapping("getGroup")
+    public JsonBean<Group> getGroup(@RequestParam("id") Long id) {
+        return JsonBean.ok(groupService.getById(id));
+    }
+
+    @PostMapping("delete")
+    public JsonBean<Void> delete(@RequestParam("id") Long id) {
+        groupService.removeById(id);
+        return JsonBean.ok();
+    }
+
+    @PostMapping("refreshRss")
+    public JsonBean<Void> refreshRss(@RequestParam("id") Long id) {
+        groupService.refreshRss(id);
+        return JsonBean.ok();
+    }
 }

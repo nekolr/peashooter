@@ -1,10 +1,12 @@
 package com.github.nekolr.peashooter.entity.domain;
 
+import com.github.nekolr.peashooter.rss.convert.Matcher;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -64,4 +66,16 @@ public class Group {
      */
     @Transient
     private String rssLink;
+
+    /**
+     * 数据源
+     */
+    @Transient
+    private Long[] dataSourceIds;
+
+    /**
+     * 匹配器
+     */
+    @Transient
+    private List<Matcher> matchers;
 }

@@ -21,18 +21,18 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SonarrServiceImpl implements ISonarrService {
 
-    private Map<Long, SeriesZhCN> sonarrSeries = new ConcurrentHashMap();
+    private Map<String, SeriesZhCN> sonarrSeries = new ConcurrentHashMap();
 
     private final SonarrApi sonarrApi;
     private final TheMovieDbApi theMovieDbApi;
 
     @Override
-    public void setSeriesZhCN(Long id, SeriesZhCN series) {
+    public void setSeriesZhCN(String id, SeriesZhCN series) {
         sonarrSeries.put(id, series);
     }
 
     @Override
-    public boolean hasSeriesZhCN(Long id) {
+    public boolean hasSeriesZhCN(String id) {
         return sonarrSeries.containsKey(id);
     }
 
@@ -59,7 +59,7 @@ public class SonarrServiceImpl implements ISonarrService {
             return Collections.emptyList();
         } else {
             Stream<SeriesZhCN> stream = seriesList.stream().map(series -> {
-                Long seriesId = series.id();
+                String seriesId = series.id();
                 if (!this.hasSeriesZhCN(seriesId)) {
                     log.info("原始剧集信息：{}", series);
                     TvResult tvResult = null;

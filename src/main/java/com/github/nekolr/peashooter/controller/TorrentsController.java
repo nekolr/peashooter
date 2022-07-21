@@ -20,7 +20,7 @@ public class TorrentsController {
 
     @GetMapping
     public void torrent(@RequestParam("title") String title, @RequestParam("episode") Integer episode,
-                        @RequestParam("season") Integer season, @RequestParam("series") Long series,
+                        @RequestParam("season") Integer season, @RequestParam("series") String series,
                         @RequestParam("url") String url, HttpServletResponse response) {
         downloadInfoService.onDownload(series, title, season, episode);
         try {

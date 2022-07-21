@@ -31,7 +31,7 @@ public class RenameTorrentJob extends QuartzJobBean {
         for (DownloadInfo info : downloadInfoList) {
             if (!CollectionUtils.isEmpty(queueList)) {
                 for (Queue queue : queueList) {
-                    Long seriesId = queue.series().id();
+                    String seriesId = queue.series().id();
                     if (Objects.equals(seriesId, info.getSeries())) {
                         if (Objects.equals(queue.episode().seasonNumber(), info.getSeason())) {
                             if (Objects.equals(queue.episode().episodeNumber(), info.getEpisode())) {
