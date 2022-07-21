@@ -1,14 +1,18 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
-import com.github.nekolr.peashooter.controller.rsp.ItemTitle;
+import com.github.nekolr.peashooter.controller.req.datasource.TestRegexp;
+import com.github.nekolr.peashooter.controller.rsp.datasource.ItemTitle;
+import com.github.nekolr.peashooter.controller.rsp.datasource.MatchResult;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
+import com.github.nekolr.peashooter.rss.convert.Matcher;
 import com.github.nekolr.peashooter.rss.load.RssLoader;
 import com.github.nekolr.peashooter.rss.write.RssWriter;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import com.github.nekolr.peashooter.util.FeedUtils;
+import com.github.nekolr.peashooter.util.FillUpZeroUtil;
 import com.github.nekolr.peashooter.util.Md5Util;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
@@ -19,12 +23,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.text.Format;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.github.nekolr.peashooter.constant.Peashooter.getRssFilepath;
+import static com.github.nekolr.peashooter.constant.Peashooter.*;
 
 @Slf4j
 @Service
@@ -103,7 +109,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     public List<ItemTitle> getItemTitleList(Long id) {
         DataSource dataSource = this.getById(id);
         if (Objects.isNull(dataSource)) {
-            return Collections.emptyList();
+            return new ArrayList<>(0);
         } else {
             String xml = rssLoader.loadFromFile(getRssFilepath(id, false));
             SyndFeed feed = FeedUtils.getFeed(xml);
@@ -115,5 +121,33 @@ public class DataSourceServiceImpl implements IDataSourceService {
             }
             return result;
         }
+    }
+
+    @Override
+    public List<MatchResult> testRegexp(TestRegexp cmd) {
+        List<ItemTitle> itemTitles = new ArrayList<>(0);
+        if (Objects.nonNull(cmd.dataSourceIds()) && cmd.dataSourceIds().length > 0) {
+            Stream<ItemTitle> stream = Arrays.stream(cmd.dataSourceIds())
+                    .flatMap(id -> this.getItemTitleList(Long.valueOf(id)).stream());
+            itemTitles = stream.collect(Collectors.toList());
+        }
+        int count = 0;
+        Matcher matcher = cmd.matcher();
+        Pattern pattern = Pattern.compile(matcher.regexp());
+        List<MatchResult> matchResultList = new ArrayList<>();
+        for (ItemTitle itemTitle : itemTitles) {
+            java.util.regex.Matcher m = pattern.matcher(itemTitle.title());
+            if (m.find(matcher.offset())) {
+                String episodeNum = m.group(EPISODE_NUM_GROUP_NAME);
+                String epNum = FillUpZeroUtil.fill(episodeNum);
+                String seasonNum = FillUpZeroUtil.fill(matcher.season());
+                String epTitle = EPISODE_TITLE_PREFIX + epNum;
+                Format format = new MessageFormat(EPISODE_TITLE_TEMPLATE);
+                String[] args = new String[]{cmd.series(), seasonNum, epNum, epTitle, cmd.language(), cmd.quality()};
+                String newTitle = format.format(args);
+                matchResultList.add(new MatchResult(++count, itemTitle.title(), newTitle, epNum));
+            }
+        }
+        return matchResultList;
     }
 }

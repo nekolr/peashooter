@@ -1,8 +1,8 @@
 package com.github.nekolr.peashooter.service;
 
-import com.github.nekolr.peashooter.controller.req.LoginUser;
-import com.github.nekolr.peashooter.controller.rsp.LoginUserVo;
-import com.github.nekolr.peashooter.controller.rsp.UserInfo;
+import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
+import com.github.nekolr.peashooter.controller.rsp.auth.LoginUserVo;
+import com.github.nekolr.peashooter.controller.rsp.auth.UserInfo;
 
 public interface IUserService {
 

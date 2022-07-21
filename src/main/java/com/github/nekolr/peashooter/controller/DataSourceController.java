@@ -1,7 +1,9 @@
 package com.github.nekolr.peashooter.controller;
 
+import com.github.nekolr.peashooter.controller.req.datasource.TestRegexp;
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
-import com.github.nekolr.peashooter.controller.rsp.ItemTitle;
+import com.github.nekolr.peashooter.controller.rsp.datasource.ItemTitle;
+import com.github.nekolr.peashooter.controller.rsp.datasource.MatchResult;
 import com.github.nekolr.peashooter.entity.JsonBean;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.service.IDataSourceService;
@@ -52,6 +54,11 @@ public class DataSourceController {
     @GetMapping("getItemTitles")
     public JsonBean<List<ItemTitle>> getItemTitleList(@RequestParam("id") Long id) {
         return JsonBean.ok(dataSourceService.getItemTitleList(id));
+    }
+
+    @PostMapping("testRegexp")
+    public JsonBean<List<MatchResult>> testRegexp(@RequestBody TestRegexp cmd) {
+        return JsonBean.ok(dataSourceService.testRegexp(cmd));
     }
 
 }

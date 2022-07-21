@@ -1,6 +1,6 @@
-package com.github.nekolr.peashooter.controller.rsp;
+package com.github.nekolr.peashooter.controller.rsp.auth;
 
-import com.github.nekolr.peashooter.controller.req.LoginUser;
+import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

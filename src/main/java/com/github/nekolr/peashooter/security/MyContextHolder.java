@@ -1,6 +1,6 @@
 package com.github.nekolr.peashooter.security;
 
-import com.github.nekolr.peashooter.controller.req.LoginUser;
+import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;

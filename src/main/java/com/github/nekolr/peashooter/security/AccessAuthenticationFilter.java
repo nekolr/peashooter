@@ -2,7 +2,7 @@ package com.github.nekolr.peashooter.security;
 
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.config.UserSettings;
-import com.github.nekolr.peashooter.controller.req.LoginUser;
+import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import com.github.nekolr.peashooter.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

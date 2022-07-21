@@ -1,7 +1,9 @@
 package com.github.nekolr.peashooter.service;
 
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
-import com.github.nekolr.peashooter.controller.rsp.ItemTitle;
+import com.github.nekolr.peashooter.controller.req.datasource.TestRegexp;
+import com.github.nekolr.peashooter.controller.rsp.datasource.ItemTitle;
+import com.github.nekolr.peashooter.controller.rsp.datasource.MatchResult;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;
@@ -30,4 +32,6 @@ public interface IDataSourceService {
     boolean refreshRss(Long id);
 
     List<ItemTitle> getItemTitleList(Long id);
+
+    List<MatchResult> testRegexp(TestRegexp cmd);
 }

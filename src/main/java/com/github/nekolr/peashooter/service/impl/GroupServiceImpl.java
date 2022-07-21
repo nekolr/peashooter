@@ -107,17 +107,14 @@ public class GroupServiceImpl implements IGroupService {
             groupDataSourceRepository.deleteAllInBatch(needDelList);
         }
 
-        String dataSourceIds = saveGroup.dataSourceIds();
-        if (StringUtils.hasText(dataSourceIds)) {
-            String[] dataSourceIdArray = dataSourceIds.split(",");
-            if (dataSourceIdArray.length > 0) {
-                Arrays.stream(dataSourceIdArray).forEach(id -> {
-                    GroupDataSource groupDataSource = new GroupDataSource();
-                    groupDataSource.setGroupId(group.getId());
-                    groupDataSource.setDatasourceId(Long.valueOf(id));
-                    groupDataSourceRepository.save(groupDataSource);
-                });
-            }
+        String[] dataSourceIds = saveGroup.dataSourceIds();
+        if (Objects.nonNull(dataSourceIds) && dataSourceIds.length > 0) {
+            Arrays.stream(dataSourceIds).forEach(id -> {
+                GroupDataSource groupDataSource = new GroupDataSource();
+                groupDataSource.setGroupId(group.getId());
+                groupDataSource.setDatasourceId(Long.valueOf(id));
+                groupDataSourceRepository.save(groupDataSource);
+            });
         }
         this.refreshRss(group.getId());
     }

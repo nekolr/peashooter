@@ -1,9 +1,9 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.config.UserSettings;
-import com.github.nekolr.peashooter.controller.req.LoginUser;
-import com.github.nekolr.peashooter.controller.rsp.LoginUserVo;
-import com.github.nekolr.peashooter.controller.rsp.UserInfo;
+import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
+import com.github.nekolr.peashooter.controller.rsp.auth.LoginUserVo;
+import com.github.nekolr.peashooter.controller.rsp.auth.UserInfo;
 import com.github.nekolr.peashooter.security.MyContextHolder;
 import com.github.nekolr.peashooter.security.TokenProvider;
 import com.github.nekolr.peashooter.service.IUserService;
