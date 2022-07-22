@@ -5,6 +5,7 @@ import com.github.nekolr.peashooter.entity.SeriesZhCN;
 import com.github.nekolr.peashooter.service.ISonarrService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,5 +26,10 @@ public class SonarrController {
     @GetMapping("refresh-series")
     public JsonBean<List<SeriesZhCN>> refreshSeries() {
         return JsonBean.ok(sonarrService.refreshSeriesZhCNList());
+    }
+
+    @PostMapping("setupAllGroupIndexer")
+    public JsonBean<Void> setupAllGroupIndexer() {
+        return JsonBean.ok(sonarrService.setupAllGroupIndexer());
     }
 }
