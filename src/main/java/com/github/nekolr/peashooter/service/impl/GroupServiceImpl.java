@@ -2,7 +2,6 @@ package com.github.nekolr.peashooter.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.config.SettingsManager;
-import com.github.nekolr.peashooter.constant.Peashooter;
 import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
 import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
 import com.github.nekolr.peashooter.entity.domain.Group;
@@ -34,7 +33,8 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.github.nekolr.peashooter.constant.Peashooter.getRssFilepath;
+import static com.github.nekolr.peashooter.constant.Peashooter.*;
+import static com.github.nekolr.peashooter.constant.Peashooter.RSS_DESCRIPTION;
 
 @Slf4j
 @Service
@@ -91,7 +91,7 @@ public class GroupServiceImpl implements IGroupService {
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         Page<Group> page = groupRepository.findAll(Example.of(group, matcher), pageable);
         List<Group> list = page.getContent();
-        list.stream().forEach(e -> e.setRssLink(Peashooter.getGroupLink(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
+        list.stream().forEach(e -> e.setRssLink(getGroupLink(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
 
         return page;
     }
@@ -153,5 +153,24 @@ public class GroupServiceImpl implements IGroupService {
     @Override
     public String getRss(String filename) {
         return rssLoader.loadFromFile(getRssFilepath(filename, true));
+    }
+
+    @Override
+    public String getAllRss() {
+        List<Group> groupList = this.findAll();
+        List<SyndEntry> entryList = new ArrayList<>();
+        String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+        for (Group group : groupList) {
+            String rss = rssLoader.loadFromFile(getRssFilepath(group.getId(), true));
+            SyndFeed feed = FeedUtils.getFeed(rss);
+            entryList.addAll(FeedUtils.getEntries(feed));
+        }
+        SyndFeed syndFeed = FeedUtils.createFeed();
+        FeedUtils.setFeedType(syndFeed, RSS_2_0);
+        FeedUtils.setTitle(syndFeed, RSS_TITLE);
+        FeedUtils.setLink(syndFeed, getAllGroupLink(mappingUrl));
+        FeedUtils.setDescription(syndFeed, RSS_DESCRIPTION);
+        FeedUtils.setEntries(syndFeed, entryList);
+        return FeedUtils.writeString(syndFeed);
     }
 }

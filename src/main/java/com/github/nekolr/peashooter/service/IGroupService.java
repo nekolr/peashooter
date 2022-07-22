@@ -32,4 +32,6 @@ public interface IGroupService {
     void refreshRss(Long groupId);
 
     String getRss(String filename);
+
+    String getAllRss();
 }

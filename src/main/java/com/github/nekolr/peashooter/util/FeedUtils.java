@@ -1,12 +1,17 @@
 package com.github.nekolr.peashooter.util;
 
 import com.rometools.rome.feed.synd.*;
+import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
+import com.rometools.rome.io.SyndFeedOutput;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.SAXBuilder;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.*;
 
 public class FeedUtils {
@@ -290,5 +295,17 @@ public class FeedUtils {
             }
         }
         return null;
+    }
+
+    public static String writeString(SyndFeed syndFeed) {
+        Writer writer = new StringWriter(1024);
+        try {
+            new SyndFeedOutput().output(syndFeed, writer, false);
+            return writer.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (FeedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

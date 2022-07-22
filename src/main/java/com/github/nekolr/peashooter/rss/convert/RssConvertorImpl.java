@@ -13,16 +13,11 @@ import com.github.nekolr.peashooter.util.FillUpZeroUtil;
 import com.rometools.rome.feed.synd.SyndEnclosure;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
-import com.rometools.rome.io.FeedException;
-import com.rometools.rome.io.SyndFeedOutput;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.*;
@@ -41,7 +36,6 @@ public class RssConvertorImpl implements RssConvertor {
     private static final String TORRENT_URI_PARAM_TITLE = "title";
     private static final String TORRENT_URI_PARAM_EPISODE = "episode";
     private static final String TORRENT_URI_PARAM_SEASON = "season";
-    private static final String RSS_2_0 = "rss_2.0";
     private final SonarrApi sonarrApi;
     private final SettingsManager settingsManager;
     private Map<String, PubDateResolver> resolverMap;
@@ -74,7 +68,7 @@ public class RssConvertorImpl implements RssConvertor {
             entries.add(entry);
         }
         FeedUtils.setEntries(syndFeed, entries);
-        return this.writeString(syndFeed);
+        return FeedUtils.writeString(syndFeed);
     }
 
     @Override
@@ -120,18 +114,6 @@ public class RssConvertorImpl implements RssConvertor {
     @Autowired
     public void setResolverMap(List<PubDateResolver> resolvers) {
         resolverMap = resolvers.stream().collect(Collectors.toMap(PubDateResolver::getType, r -> r));
-    }
-
-    private String writeString(SyndFeed syndFeed) {
-        Writer writer = new StringWriter(1024);
-        try {
-            new SyndFeedOutput().output(syndFeed, writer, false);
-            return writer.toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (FeedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private String epTitle(String seriesTitle, Integer season, String episodeNum, String quality, String language) {

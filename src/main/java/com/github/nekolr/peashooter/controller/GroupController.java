@@ -45,6 +45,19 @@ public class GroupController {
         }
     }
 
+    @GetMapping("allRss")
+    public void getAllGroupRss(HttpServletResponse resp) {
+        String rss = groupService.getAllRss();
+        try {
+            OutputStream out = resp.getOutputStream();
+            resp.setContentType(MediaType.APPLICATION_RSS_XML_VALUE);
+            resp.setCharacterEncoding(CHARSET);
+            StreamUtils.copy(rss, Charset.forName(CHARSET), out);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PostMapping("getList")
     public JsonBean<Page<Group>> getGroupList(@RequestBody GetGroupList cmd) {
         Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());

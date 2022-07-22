@@ -17,6 +17,8 @@ public interface Peashooter {
     String CHARSET = "utf-8";
     String XML_SUFFIX = "xml";
     String API_KEY = "apiKey";
+    String ALL_RSS = "allRss";
+    String RSS_2_0 = "rss_2.0";
     String MI_KAN_URL = "https://mikanani.me";
 
     /**
@@ -136,5 +138,9 @@ public interface Peashooter {
 
     static String getGroupLink(String mappingUrl, Long id) {
         return mappingUrl + LEFT_SLASH + API + LEFT_SLASH + GROUP + LEFT_SLASH + id + DOT + XML_SUFFIX;
+    }
+
+    static String getAllGroupLink(String mappingUrl) {
+        return mappingUrl + LEFT_SLASH + API + LEFT_SLASH + GROUP + LEFT_SLASH + ALL_RSS;
     }
 }

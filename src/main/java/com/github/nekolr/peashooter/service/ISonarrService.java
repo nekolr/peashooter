@@ -18,4 +18,6 @@ public interface ISonarrService {
 
     @Caching(evict = {@CacheEvict(key = "'all'", beforeInvocation = true)}, cacheable = {@Cacheable(key = "'all'")})
     List<SeriesZhCN> refreshSeriesZhCNList();
+
+    void setupAllGroupIndexer();
 }
