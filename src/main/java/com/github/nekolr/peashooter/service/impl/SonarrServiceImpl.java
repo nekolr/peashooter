@@ -80,7 +80,7 @@ public class SonarrServiceImpl implements ISonarrService {
             }).sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed());
 
             List<SeriesZhCN> result = stream.collect(Collectors.toList());
-            log.info("刷新完毕");
+            log.info("剧集信息刷新完毕");
             return result;
         }
     }
