@@ -27,6 +27,31 @@
         <mapstruct.version>1.5.2.Final</mapstruct.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <npm>npm.cmd</npm>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+            <properties>
+                <npm>npm</npm>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -150,6 +175,78 @@
                         </path>
                     </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!-- skip test -->
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <!-- npm install && npm run build -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>exec-npm-install</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${npm}</executable>
+                            <arguments>
+                                <argument>install</argument>
+                                <argument>--registry=https://registry.npmmirror.com/</argument>
+                            </arguments>
+                            <workingDirectory>${basedir}/src/peashooter-ui</workingDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>exec-npm-run-build</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${npm}</executable>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>build</argument>
+                            </arguments>
+                            <workingDirectory>${basedir}/src/peashooter-ui</workingDirectory>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+            <!-- dist add to resources -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-resource</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/peashooter-ui/dist</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                    <targetPath>static</targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
