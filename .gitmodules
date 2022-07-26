@@ -1,0 +1,3 @@
+[submodule "src/peashooter-ui"]
+	path = src/peashooter-ui
+	url = https://github.com/nekolr/peashooter-ui
