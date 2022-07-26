@@ -52,7 +52,7 @@ public class SonarrServiceImpl implements ISonarrService {
             Stream<SeriesZhCN> stream = seriesList.stream()
                     .filter(series -> this.hasSeriesZhCN(series.id()))
                     .map(series -> sonarrSeries.get(series.id()))
-                    .sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed());
+                    .sorted(Comparator.comparing(SeriesZhCN::seriesId, Comparator.comparing(Long::valueOf)).reversed());
             return stream.collect(Collectors.toList());
         }
     }
@@ -84,7 +84,7 @@ public class SonarrServiceImpl implements ISonarrService {
                     }
                 }
                 return sonarrSeries.get(seriesId);
-            }).sorted(Comparator.comparing(SeriesZhCN::seriesId).reversed());
+            }).sorted(Comparator.comparing(SeriesZhCN::seriesId, Comparator.comparing(Long::valueOf)).reversed());
 
             List<SeriesZhCN> result = stream.collect(Collectors.toList());
             log.info("剧集信息刷新完毕");
