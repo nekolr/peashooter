@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.1</version>
+        <version>2.7.2</version>
     </parent>
 
     <properties>
@@ -22,7 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <rome.version>1.18.0</rome.version>
         <jjwt.version>0.11.5</jjwt.version>
-        <fastjson.version>2.0.8</fastjson.version>
+        <fastjson.version>2.0.10</fastjson.version>
         <jodd-http.version>6.2.1</jodd-http.version>
         <mapstruct.version>1.5.2.Final</mapstruct.version>
     </properties>
@@ -188,7 +188,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>exec-npm-install</id>
