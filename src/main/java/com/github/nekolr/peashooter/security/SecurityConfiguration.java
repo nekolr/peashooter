@@ -60,7 +60,7 @@ public class SecurityConfiguration {
                 .antMatchers(HttpMethod.GET, "/").anonymous()
                 // 登录请求不拦截（如果登录请求头包含 Authorization: Bearer 任意字符，那么还是会进行校验）
                 .antMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .antMatchers(HttpMethod.POST, "/api/torrents").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/torrents").permitAll()
                 // 静态资源可以匿名访问
                 .antMatchers(HttpMethod.GET, "/assets/**").anonymous()
                 .antMatchers(HttpMethod.GET, "/resource/**").anonymous()
