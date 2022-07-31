@@ -21,12 +21,12 @@ public interface IGroupService {
     @Cacheable(key = "#p0")
     Group getById(Long id);
 
-    @CacheEvict(key = "'all'")
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0.id", condition = "#p0.id != null")})
     Group save(Group group);
 
     Page<Group> findAllByPage(GetGroupList cmd, Pageable pageable);
 
-    @CacheEvict(key = "'all'")
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0.id", condition = "#p0.id != null")})
     void saveGroup(SaveGroup saveGroup);
 
     void refreshRss(Long groupId);
