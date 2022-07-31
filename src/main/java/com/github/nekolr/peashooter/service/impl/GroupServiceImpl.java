@@ -113,6 +113,9 @@ public class GroupServiceImpl implements IGroupService {
 
         Long[] dataSourceIds = saveGroup.dataSourceIds();
         if (Objects.nonNull(dataSourceIds) && dataSourceIds.length > 0) {
+            // 先删除旧的
+            gdService.deleteList(gdService.getByGroupId(group.getId()));
+
             Arrays.stream(dataSourceIds).forEach(id -> {
                 GroupDataSource groupDataSource = new GroupDataSource();
                 groupDataSource.setGroupId(group.getId());
