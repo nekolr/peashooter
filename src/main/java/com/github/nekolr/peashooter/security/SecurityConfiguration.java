@@ -69,6 +69,7 @@ public class SecurityConfiguration {
                 .antMatchers(HttpMethod.GET, "/favicon.png").anonymous()
                 // 前端路由可以匿名访问
                 .antMatchers(HttpMethod.GET, "/login").anonymous()
+                .antMatchers(HttpMethod.GET, "/home").anonymous()
                 .antMatchers(HttpMethod.GET, "/404").anonymous()
                 .antMatchers(HttpMethod.GET, "/system/**").anonymous()
                 .antMatchers(HttpMethod.GET, "/group/**").anonymous()
