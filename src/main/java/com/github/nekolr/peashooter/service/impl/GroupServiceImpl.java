@@ -170,7 +170,23 @@ public class GroupServiceImpl implements IGroupService {
         FeedUtils.setTitle(syndFeed, RSS_TITLE);
         FeedUtils.setLink(syndFeed, getAllGroupLink(mappingUrl));
         FeedUtils.setDescription(syndFeed, RSS_DESCRIPTION);
-        FeedUtils.setEntries(syndFeed, entryList);
+        FeedUtils.setEntries(syndFeed, this.distinct(entryList));
         return FeedUtils.writeString(syndFeed);
+    }
+
+    private List<SyndEntry> distinct(List<SyndEntry> entryList) {
+        Map<String, SyndEntry> dictionary = new LinkedHashMap<>();
+        for (SyndEntry entry : entryList) {
+            String key = FeedUtils.getUri(entry);
+            if (!dictionary.containsKey(key)) {
+                dictionary.put(key, entry);
+            } else {
+                SyndEntry oldEntry = dictionary.get(key);
+                if (oldEntry.getPublishedDate().before(entry.getPublishedDate())) {
+                    dictionary.put(key, entry);
+                }
+            }
+        }
+        return dictionary.values().stream().collect(Collectors.toList());
     }
 }
