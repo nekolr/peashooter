@@ -45,7 +45,7 @@ public class GroupController {
         }
     }
 
-    @GetMapping("allRss")
+    @GetMapping("allRss.xml")
     public void getAllGroupRss(HttpServletResponse resp) {
         String rss = groupService.getAllRss();
         try {

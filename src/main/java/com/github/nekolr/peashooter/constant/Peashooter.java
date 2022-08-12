@@ -141,6 +141,6 @@ public interface Peashooter {
     }
 
     static String getAllGroupLink(String mappingUrl) {
-        return mappingUrl + LEFT_SLASH + API + LEFT_SLASH + GROUP + LEFT_SLASH + ALL_RSS;
+        return mappingUrl + LEFT_SLASH + API + LEFT_SLASH + GROUP + LEFT_SLASH + ALL_RSS + DOT + XML_SUFFIX;
     }
 }
