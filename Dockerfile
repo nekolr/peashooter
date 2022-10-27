@@ -1,5 +1,4 @@
-# https://github.com/nekolr/maven-image/tree/master/3.8.5-jdk-17-slim
-FROM nekolr/maven:3.8.5-jdk-17-slim AS build
+FROM maven:3.8.5-openjdk-17-slim AS build
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
