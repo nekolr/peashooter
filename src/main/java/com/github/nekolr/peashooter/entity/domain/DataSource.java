@@ -3,7 +3,7 @@ package com.github.nekolr.peashooter.entity.domain;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Data

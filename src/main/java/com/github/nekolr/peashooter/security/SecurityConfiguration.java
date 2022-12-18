@@ -39,7 +39,6 @@ public class SecurityConfiguration {
                 .and().and()
                 .headers()
                 .xssProtection()
-                .xssProtectionEnabled(true)
 
                 // 授权异常处理
                 .and().and()
@@ -53,27 +52,29 @@ public class SecurityConfiguration {
 
                 // 过滤请求
                 .and()
-                .authorizeRequests()
+                .authorizeHttpRequests()
+
                 // OPTIONS 预检请求可以匿名访问
-                .antMatchers(HttpMethod.OPTIONS, "/**").anonymous()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").anonymous()
                 // 主页可以匿名访问
-                .antMatchers(HttpMethod.GET, "/").anonymous()
+                .requestMatchers(HttpMethod.GET, "/").anonymous()
+                .requestMatchers(HttpMethod.GET, "/index.html").anonymous()
                 // 登录请求不拦截（如果登录请求头包含 Authorization: Bearer 任意字符，那么还是会进行校验）
-                .antMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 // 种子下载不拦截
-                .antMatchers(HttpMethod.GET, "/api/torrents").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/torrents").permitAll()
                 // 静态资源可以匿名访问
-                .antMatchers(HttpMethod.GET, "/assets/**").anonymous()
-                .antMatchers(HttpMethod.GET, "/resource/**").anonymous()
-                .antMatchers(HttpMethod.GET, "/favicon.ico").anonymous()
-                .antMatchers(HttpMethod.GET, "/favicon.png").anonymous()
+                .requestMatchers(HttpMethod.GET, "/assets/**").anonymous()
+                .requestMatchers(HttpMethod.GET, "/resource/**").anonymous()
+                .requestMatchers(HttpMethod.GET, "/favicon.ico").anonymous()
+                .requestMatchers(HttpMethod.GET, "/favicon.png").anonymous()
                 // 前端路由可以匿名访问
-                .antMatchers(HttpMethod.GET, "/login").anonymous()
-                .antMatchers(HttpMethod.GET, "/home").anonymous()
-                .antMatchers(HttpMethod.GET, "/404").anonymous()
-                .antMatchers(HttpMethod.GET, "/system/**").anonymous()
-                .antMatchers(HttpMethod.GET, "/group/**").anonymous()
-                .antMatchers(HttpMethod.GET, "/datasource/**").anonymous()
+                .requestMatchers(HttpMethod.GET, "/login").anonymous()
+                .requestMatchers(HttpMethod.GET, "/home").anonymous()
+                .requestMatchers(HttpMethod.GET, "/404").anonymous()
+                .requestMatchers(HttpMethod.GET, "/system/**").anonymous()
+                .requestMatchers(HttpMethod.GET, "/group/**").anonymous()
+                .requestMatchers(HttpMethod.GET, "/datasource/**").anonymous()
 
                 // 其他所有请求都要经过验证
                 .anyRequest().authenticated();

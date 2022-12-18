@@ -4,7 +4,7 @@ import com.github.nekolr.peashooter.rss.convert.Matcher;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 import java.util.List;
 

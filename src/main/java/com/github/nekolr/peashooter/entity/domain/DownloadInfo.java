@@ -3,7 +3,7 @@ package com.github.nekolr.peashooter.entity.domain;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Data
 @Entity
