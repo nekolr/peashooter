@@ -1,7 +1,7 @@
 server:
   port: 8962
   tomcat:
-    basedir: ${user.home}/peashooter/tmp
+    basedir: ${user.dir}/peashooter/tmp
 
 spring:
   application:
@@ -15,7 +15,7 @@ spring:
       ddl-auto: update
       show-sql: true
   datasource:
-    url: jdbc:h2:file:~/peashooter/db;FILE_LOCK=FS
+    url: jdbc:h2:file:${user.dir}/peashooter/db;FILE_LOCK=FS
     username: sa
     password: sa
   cache:
@@ -24,7 +24,7 @@ spring:
 
 logging:
   file:
-    name: ${user.home}/peashooter/logs/peashooter.log
+    name: ${user.dir}/peashooter/logs/peashooter.log
 
 peashooter:
   username: ${PEASHOOTER_USERNAME:admin}
