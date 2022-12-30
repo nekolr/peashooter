@@ -109,7 +109,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     public List<ItemTitle> getItemTitleList(Long id) {
         DataSource dataSource = this.getById(id);
         if (Objects.isNull(dataSource)) {
-            return new ArrayList<>(0);
+            return Collections.emptyList();
         } else {
             String xml = rssLoader.loadFromFile(getRssFilepath(id, false));
             SyndFeed feed = FeedUtils.getFeed(xml);

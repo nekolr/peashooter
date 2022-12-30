@@ -83,6 +83,10 @@ public class RssConvertorImpl implements RssConvertor {
             java.util.regex.Matcher m = pattern.matcher(epTitle);
             if (m.find(matcher.offset())) {
                 String episodeNum = m.group(EPISODE_NUM_GROUP_NAME);
+                if (Objects.nonNull(matcher.episodeOffset())) {
+                    episodeNum = String.valueOf(Integer.valueOf(episodeNum) + matcher.episodeOffset());
+                }
+
                 epTitle = this.epTitle(series.title(), matcher.season(), episodeNum, ctx.quality(), ctx.language());
 
                 String link = FeedUtils.getLink(entry);
