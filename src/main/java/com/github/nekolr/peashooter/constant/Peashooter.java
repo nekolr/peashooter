@@ -64,7 +64,7 @@ public interface Peashooter {
     /**
      * 家目录
      */
-    String HOME_DIR = System.getProperty("user.home") + File.separator + "peashooter";
+    String HOME_DIR = System.getProperty("user.dir") + File.separator + "peashooter";
 
     /**
      * 配置文件目录
