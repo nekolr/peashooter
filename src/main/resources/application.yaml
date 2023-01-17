@@ -32,3 +32,5 @@ peashooter:
 
 jwt:
   period: 1800s
+cors:
+  allowOrigin: ${ALLOW_ORIGIN:http://locahost:8962}
