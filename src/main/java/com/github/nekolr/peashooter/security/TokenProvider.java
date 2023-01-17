@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -31,6 +32,7 @@ public class TokenProvider {
         return Jwts.builder()
                 .setSubject(username)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
+                .setId(UUID.randomUUID().toString().replaceAll("-", ""))
                 .setExpiration(expireDate)
                 .compact();
     }
