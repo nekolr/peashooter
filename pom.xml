@@ -78,6 +78,10 @@
             <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jodd</groupId>
             <artifactId>jodd-http</artifactId>
             <version>${jodd-http.version}</version>

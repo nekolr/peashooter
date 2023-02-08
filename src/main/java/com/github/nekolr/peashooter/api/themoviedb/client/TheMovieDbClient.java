@@ -5,12 +5,15 @@ import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
 import com.github.nekolr.peashooter.api.themoviedb.rsp.FindSeries;
 import com.github.nekolr.peashooter.api.themoviedb.rsp.FindSeries.TvResult;
 import com.github.nekolr.peashooter.config.SettingsManager;
+import jodd.http.HttpException;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 import jodd.http.ProxyInfo;
 import jodd.http.net.SocketHttpConnectionProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -30,11 +33,13 @@ public class TheMovieDbClient implements TheMovieDbApi {
     private static final String FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE = "external_source";
 
     @Override
+    @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
     public TvResult findByImdbId(String imdbId) {
         return this.getTvResult(imdbId, DEFAULT_EXTERNAL_SOURCE);
     }
 
     @Override
+    @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
     public TvResult findByTvdbId(String tvdbId) {
         return this.getTvResult(tvdbId, TVDB_EXTERNAL_SOURCE);
     }
