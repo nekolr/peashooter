@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -23,20 +26,27 @@ public class QBittorrentClient implements QBittorrentApi {
     private static final String RENAME_TORRENT_URI_PARAM_NAME = "name";
     private static final String LOGIN_URI_FORM_PARAM_USERNAME = "username";
     private static final String LOGIN_URI_FORM_PARAM_PASSWORD = "password";
+    private Map<String, SID> sidCache = new ConcurrentHashMap<>();
 
     @Override
     public SID login() {
-        String url = settingsManager.get().getQbittorrent().getUrl() + LOGIN_URI;
-        String username = settingsManager.get().getQbittorrent().getUsername();
-        String password = settingsManager.get().getQbittorrent().getPassword();
-        HttpRequest request = HttpRequest.post(url);
-        request.form(LOGIN_URI_FORM_PARAM_USERNAME, username);
-        request.form(LOGIN_URI_FORM_PARAM_PASSWORD, password);
-        HttpResponse response = request.send();
-        if (response.statusCode() != 200)
-            return null;
-        Cookie[] cookies = response.cookies();
-        return new SID(cookies[0].getValue());
+        if (sidCache.containsKey(COOKIE)) {
+            return sidCache.get(COOKIE);
+        } else {
+            String url = settingsManager.get().getQbittorrent().getUrl() + LOGIN_URI;
+            String username = settingsManager.get().getQbittorrent().getUsername();
+            String password = settingsManager.get().getQbittorrent().getPassword();
+            HttpRequest request = HttpRequest.post(url);
+            request.form(LOGIN_URI_FORM_PARAM_USERNAME, username);
+            request.form(LOGIN_URI_FORM_PARAM_PASSWORD, password);
+            HttpResponse response = request.send();
+            if (response.statusCode() != 200)
+                return null;
+            Cookie[] cookies = response.cookies();
+            SID sid = new SID(cookies[0].getValue());
+            sidCache.put(COOKIE, sid);
+            return sid;
+        }
     }
 
     @Override
@@ -46,6 +56,10 @@ public class QBittorrentClient implements QBittorrentApi {
         try {
             request.header(COOKIE, COOKIE_VALUE_PREFIX + this.login().sid());
             HttpResponse response = request.send();
+            if (response.statusCode() == 403) {
+                sidCache.clear();
+                return this.getAppVersion();
+            }
             if (response.statusCode() != 200)
                 return null;
             return new AppVersion(response.bodyText());
@@ -63,6 +77,10 @@ public class QBittorrentClient implements QBittorrentApi {
         request.form(RENAME_TORRENT_URI_PARAM_HASH, hash);
         request.form(RENAME_TORRENT_URI_PARAM_NAME, name);
         HttpResponse response = request.send();
+        if (response.statusCode() == 403) {
+            sidCache.clear();
+            return this.renameTorrent(hash, name);
+        }
         return response.statusCode() == 200;
     }
 }
