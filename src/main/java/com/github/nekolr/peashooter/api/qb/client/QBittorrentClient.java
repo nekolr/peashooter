@@ -5,10 +5,13 @@ import com.github.nekolr.peashooter.api.qb.rsp.AppVersion;
 import com.github.nekolr.peashooter.api.qb.rsp.SID;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import jodd.http.Cookie;
+import jodd.http.HttpException;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -50,6 +53,7 @@ public class QBittorrentClient implements QBittorrentApi {
     }
 
     @Override
+    @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
     public AppVersion getAppVersion() {
         String url = settingsManager.get().getQbittorrent().getUrl() + APP_VERSION_URI;
         HttpRequest request = HttpRequest.get(url);
@@ -58,7 +62,7 @@ public class QBittorrentClient implements QBittorrentApi {
             HttpResponse response = request.send();
             if (response.statusCode() == 403) {
                 sidCache.clear();
-                return this.getAppVersion();
+                throw new HttpException("cookies expired");
             }
             if (response.statusCode() != 200)
                 return null;
@@ -70,6 +74,7 @@ public class QBittorrentClient implements QBittorrentApi {
     }
 
     @Override
+    @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
     public boolean renameTorrent(String hash, String name) {
         String url = settingsManager.get().getQbittorrent().getUrl() + RENAME_TORRENT_URI;
         HttpRequest request = HttpRequest.post(url);
@@ -79,7 +84,7 @@ public class QBittorrentClient implements QBittorrentApi {
         HttpResponse response = request.send();
         if (response.statusCode() == 403) {
             sidCache.clear();
-            return this.renameTorrent(hash, name);
+            throw new HttpException("cookies expired");
         }
         return response.statusCode() == 200;
     }
