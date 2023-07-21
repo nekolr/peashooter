@@ -57,20 +57,15 @@ public class QBittorrentClient implements QBittorrentApi {
     public AppVersion getAppVersion() {
         String url = settingsManager.get().getQbittorrent().getUrl() + APP_VERSION_URI;
         HttpRequest request = HttpRequest.get(url);
-        try {
-            request.header(COOKIE, COOKIE_VALUE_PREFIX + this.login().sid());
-            HttpResponse response = request.send();
-            if (response.statusCode() == 403) {
-                sidCache.clear();
-                throw new HttpException("cookies expired");
-            }
-            if (response.statusCode() != 200)
-                return null;
-            return new AppVersion(response.bodyText());
-        } catch (Exception e) {
-            log.error("get app version error: {}", e.getMessage());
-            return null;
+        request.header(COOKIE, COOKIE_VALUE_PREFIX + this.login().sid());
+        HttpResponse response = request.send();
+        if (response.statusCode() == 403) {
+            sidCache.clear();
+            throw new HttpException("cookies expired");
         }
+        if (response.statusCode() != 200)
+            return null;
+        return new AppVersion(response.bodyText());
     }
 
     @Override
