@@ -139,10 +139,12 @@ public class GroupServiceImpl implements IGroupService {
             String rss = rssLoader.loadFromFile(getRssFilepath(ds.getDatasourceId(), false));
             SyndFeed syndFeed = FeedUtils.getFeed(rss);
             List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
-            for (SyndEntry entry : entryList) {
-                Item item = rssConvertor.convert(entry, convertContext);
-                if (Objects.nonNull(item)) {
-                    items.add(item);
+            if (!CollectionUtils.isEmpty(entryList)) {
+                for (SyndEntry entry : entryList) {
+                    Item item = rssConvertor.convert(entry, convertContext);
+                    if (Objects.nonNull(item)) {
+                        items.add(item);
+                    }
                 }
             }
         }
