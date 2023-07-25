@@ -14,17 +14,17 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.2</version>
+        <version>3.1.2</version>
     </parent>
 
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <rome.version>1.18.0</rome.version>
+        <rome.version>2.1.0</rome.version>
         <jjwt.version>0.11.5</jjwt.version>
-        <fastjson.version>2.0.21</fastjson.version>
+        <fastjson.version>2.0.37</fastjson.version>
         <jodd-http.version>6.3.0</jodd-http.version>
-        <mapstruct.version>1.5.3.Final</mapstruct.version>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
     </properties>
 
     <profiles>
