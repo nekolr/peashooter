@@ -14,6 +14,7 @@ import com.rometools.rome.feed.synd.SyndEnclosure;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +29,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RssConvertorImpl implements RssConvertor {
 
     private static final String TORRENTS_URI = "/api/torrents";
@@ -77,6 +79,10 @@ public class RssConvertorImpl implements RssConvertor {
         String epTitle = FeedUtils.getTitle(entry);
         List<Matcher> matchers = ctx.matchers();
         Series series = sonarrApi.getSeries(ctx.referenceId());
+        if (Objects.isNull(series)) {
+            log.warn("转换分组 {} 失败，Entry Title：{}", ctx.groupId(), epTitle);
+            return null;
+        }
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
         for (Matcher matcher : matchers) {
             Pattern pattern = Pattern.compile(matcher.regexp());

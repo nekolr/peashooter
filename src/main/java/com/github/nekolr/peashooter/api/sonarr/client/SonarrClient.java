@@ -6,10 +6,13 @@ import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.api.sonarr.SonarrApi;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
+import jodd.http.HttpException;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
@@ -52,6 +55,7 @@ public class SonarrClient implements SonarrApi {
     }
 
     @Override
+    @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
     public Series getSeries(String id) {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         String uri = MessageFormat.format(GET_SERIES_URI, id);
