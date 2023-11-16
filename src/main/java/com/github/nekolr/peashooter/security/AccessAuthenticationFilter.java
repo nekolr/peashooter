@@ -4,6 +4,7 @@ import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import com.github.nekolr.peashooter.service.IUserService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +17,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.Objects;
 
@@ -56,8 +58,9 @@ public class AccessAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String jwt = this.resolveToken(request);
 
-        if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-            String username = tokenProvider.getUsername(jwt);
+        Claims claims;
+        if (StringUtils.hasText(jwt) && (claims = tokenProvider.getClaims(jwt)) != null) {
+            String username = claims.getSubject();
             // 只有在 Authentication 为空时才会放入
             if (Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
                 LoginUser loginUser = userService.findByUsername(username);

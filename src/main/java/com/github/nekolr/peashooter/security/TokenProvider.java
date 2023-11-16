@@ -47,6 +47,35 @@ public class TokenProvider {
         return claims.getSubject();
     }
 
+    public Claims getClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            // token 过期
+            log.error("Token has expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            // token 格式错误
+            log.error("Token format error: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            // token 构造错误
+            log.error("Token construct error: {}", e.getMessage());
+        } catch (SignatureException e) {
+            // 签名失败
+            log.error("Signature failed: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 非法参数
+            log.error("Illegal argument: {}", e.getMessage());
+        } catch (JwtException e) {
+            // 其他异常
+            log.error("Other exception: {}", e.getMessage());
+        }
+        return null;
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
