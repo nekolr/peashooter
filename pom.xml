@@ -21,8 +21,8 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <rome.version>2.1.0</rome.version>
-        <jjwt.version>0.11.5</jjwt.version>
-        <fastjson.version>2.0.37</fastjson.version>
+        <jjwt.version>0.12.3</jjwt.version>
+        <fastjson.version>2.0.42</fastjson.version>
         <jodd-http.version>6.3.0</jodd-http.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
     </properties>
