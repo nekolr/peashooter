@@ -9,7 +9,6 @@ spring:
   jackson:
     time-zone: GMT+8
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     open-in-view: true
     hibernate:
       ddl-auto: update
