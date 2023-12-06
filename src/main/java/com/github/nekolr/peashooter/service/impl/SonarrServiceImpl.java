@@ -95,13 +95,16 @@ public class SonarrServiceImpl implements ISonarrService {
     }
 
     @Override
-    public void refreshSeriesFully() {
-        log.info("重新同步 sonarr 的剧集中文信息");
+    public void syncSeriesLatest() {
+        final long REFRESH_COUNT = 100;
+        log.info("重新同步 sonarr 最近 {} 部剧集的中文信息", REFRESH_COUNT);
         List<Series> seriesList = sonarrApi.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
             log.info("没有获取到 sonarr 的剧集信息");
         } else {
-            seriesList.stream().forEach(series -> {
+            Comparator<Series> comparator = Comparator.comparing(Series::id,
+                    Comparator.comparing(Long::valueOf)).reversed();
+            seriesList.stream().sorted(comparator).limit(REFRESH_COUNT).forEach(series -> {
                 String seriesId = series.id();
                 log.info("原始剧集信息：{}", series);
                 TvResult tvResult = null;
@@ -126,7 +129,7 @@ public class SonarrServiceImpl implements ISonarrService {
                     }
                 }
             });
-            log.info("剧集信息刷新完毕");
+            log.info("剧集信息同步完毕");
         }
     }
 

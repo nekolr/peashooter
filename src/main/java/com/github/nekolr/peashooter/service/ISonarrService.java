@@ -18,5 +18,5 @@ public interface ISonarrService {
     Boolean setupAllGroupIndexer();
 
     @CacheEvict(key = "'all'", beforeInvocation = true)
-    void refreshSeriesFully();
+    void syncSeriesLatest();
 }

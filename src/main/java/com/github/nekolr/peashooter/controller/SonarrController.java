@@ -28,9 +28,9 @@ public class SonarrController {
         return JsonBean.ok(sonarrService.refreshSeriesName());
     }
 
-    @GetMapping("refresh-series-fully")
-    public JsonBean<Void> refreshSeriesFully() {
-        sonarrService.refreshSeriesFully();
+    @GetMapping("sync-series-latest")
+    public JsonBean<Void> syncSeriesLatest() {
+        sonarrService.syncSeriesLatest();
         return JsonBean.ok();
     }
 
