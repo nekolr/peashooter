@@ -13,9 +13,9 @@ public interface ISeriesNameService {
 
     List<SeriesName> findAll();
 
-    @Caching(evict = {@CacheEvict(key = "#p0.titleJp", condition = "#p0.titleJp != null")})
+    @Caching(evict = {@CacheEvict(key = "#p0.titleEn", condition = "#p0.titleEn != null")})
     void saveSeriesName(SeriesName seriesName);
 
     @Cacheable(key = "#p0", unless = "null == #result")
-    SeriesName findByTitleJp(String titleJp);
+    SeriesName findByTitleEn(String titleEn);
 }

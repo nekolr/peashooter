@@ -62,7 +62,7 @@ public class SonarrServiceImpl implements ISonarrService {
                 String seriesId = series.id();
                 if (!sonarrSeries.containsKey(seriesId)) {
                     log.info("原始剧集信息：{}", series);
-                    SeriesName seriesName = seriesNameService.findByTitleJp(series.title());
+                    SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
                     if (Objects.isNull(seriesName)) {
                         TvResult tvResult = null;
                         if (Objects.nonNull(series.imdbId())) {
@@ -80,7 +80,7 @@ public class SonarrServiceImpl implements ISonarrService {
                         }
                     } else {
                         log.info("加载本地剧集信息：{}", seriesName);
-                        SeriesNameDto dto = new SeriesNameDto(seriesId, seriesName.getTitleZhCN(), seriesName.getTitleJp());
+                        SeriesNameDto dto = new SeriesNameDto(seriesId, seriesName.getTitleZhCN(), seriesName.getTitleEn());
                         sonarrSeries.put(seriesId, dto);
                     }
                 }

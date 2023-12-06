@@ -18,10 +18,10 @@ public class SeriesName {
     private Long id;
 
     /**
-     * 日语标题
+     * 英文标题
      */
-    @Column(name = "title_jp")
-    private String titleJp;
+    @Column(name = "title_en")
+    private String titleEn;
 
     /**
      * 简中标题
@@ -29,8 +29,8 @@ public class SeriesName {
     @Column(name = "title_zh_cn")
     private String titleZhCN;
 
-    public SeriesName(String titleJp, String titleZhCN) {
-        this.titleJp = titleJp;
+    public SeriesName(String titleEn, String titleZhCN) {
+        this.titleEn = titleEn;
         this.titleZhCN = titleZhCN;
     }
 }

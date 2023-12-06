@@ -29,19 +29,19 @@ public class SeriesNameServiceImpl implements ISeriesNameService {
     public void saveSeriesName(SeriesName seriesName) {
         List<SeriesName> seriesNames = this.findAll();
         Optional<SeriesName> op = seriesNames.stream()
-                .filter(sn -> sn.getTitleJp().equals(seriesName.getTitleJp())).findAny();
+                .filter(sn -> sn.getTitleEn().equals(seriesName.getTitleEn())).findAny();
         if (!op.isPresent()) {
             seriesNameRepository.save(seriesName);
         }
     }
 
     @Override
-    public SeriesName findByTitleJp(String titleJp) {
+    public SeriesName findByTitleEn(String titleEn) {
         SeriesName seriesName = new SeriesName();
-        seriesName.setTitleJp(titleJp);
+        seriesName.setTitleEn(titleEn);
         ExampleMatcher matcher = ExampleMatcher.matching()
                 .withNullHandler(ExampleMatcher.NullHandler.IGNORE)
-                .withMatcher("title_jp", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
+                .withMatcher("title_en", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         return seriesNameRepository.findOne(Example.of(seriesName, matcher)).orElse(null);
     }
 }
