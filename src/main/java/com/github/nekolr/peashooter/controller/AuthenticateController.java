@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.controller;
 
 import com.github.nekolr.peashooter.controller.rsp.auth.UserInfo;
-import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.dto.JsonBean;
 import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import com.github.nekolr.peashooter.controller.rsp.auth.LoginUserVo;
 import com.github.nekolr.peashooter.service.IUserService;

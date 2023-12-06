@@ -2,7 +2,7 @@ package com.github.nekolr.peashooter.controller;
 
 import com.github.nekolr.peashooter.config.Settings;
 import com.github.nekolr.peashooter.controller.req.settings.*;
-import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.dto.JsonBean;
 import com.github.nekolr.peashooter.service.ISettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

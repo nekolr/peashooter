@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.entity;
+package com.github.nekolr.peashooter.entity.dto;
 
 public record JsonBean<T>(String msg, Boolean success, T data) {
 

@@ -2,7 +2,7 @@ package com.github.nekolr.peashooter.controller;
 
 import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
 import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
-import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.dto.JsonBean;
 import com.github.nekolr.peashooter.entity.domain.Group;
 import com.github.nekolr.peashooter.service.IGroupService;
 import lombok.RequiredArgsConstructor;

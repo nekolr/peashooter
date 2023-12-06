@@ -19,7 +19,7 @@ spring:
     password: sa
   cache:
     caffeine:
-      spec: initialCapacity=50,maximumSize=100,expireAfterWrite=3h,expireAfterAccess=3h
+      spec: initialCapacity=50,maximumSize=300,expireAfterWrite=3h,expireAfterAccess=3h
 
 logging:
   file:

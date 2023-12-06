@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.service;
 
 
-import com.github.nekolr.peashooter.entity.SeriesZhCN;
+import com.github.nekolr.peashooter.entity.dto.SeriesNameDto;
 import org.springframework.cache.annotation.*;
 
 import java.util.List;
@@ -9,15 +9,11 @@ import java.util.List;
 @CacheConfig(cacheNames = "series")
 public interface ISonarrService {
 
-    void setSeriesZhCN(String id, SeriesZhCN series);
-
-    boolean hasSeriesZhCN(String id);
-
     @Cacheable(key = "'all'")
-    List<SeriesZhCN> getSeriesZhCNList();
+    List<SeriesNameDto> getSeriesNameList();
 
     @Caching(evict = {@CacheEvict(key = "'all'", beforeInvocation = true)}, cacheable = {@Cacheable(key = "'all'")})
-    List<SeriesZhCN> refreshSeriesZhCNList();
+    List<SeriesNameDto> refreshSeriesName();
 
     Boolean setupAllGroupIndexer();
 }

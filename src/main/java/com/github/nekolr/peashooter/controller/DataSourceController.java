@@ -4,7 +4,7 @@ import com.github.nekolr.peashooter.controller.req.datasource.TestRegexp;
 import com.github.nekolr.peashooter.controller.req.datasource.GetDataSourceList;
 import com.github.nekolr.peashooter.controller.rsp.datasource.ItemTitle;
 import com.github.nekolr.peashooter.controller.rsp.datasource.MatchResult;
-import com.github.nekolr.peashooter.entity.JsonBean;
+import com.github.nekolr.peashooter.entity.dto.JsonBean;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import lombok.RequiredArgsConstructor;

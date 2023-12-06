@@ -26,7 +26,7 @@ public class SonarrSeriesInitializer {
         if (!StringUtils.hasText(apiKey)) {
             log.warn("没有配置 TheMovieDb 的 ApiKey，初始化任务终止");
         } else {
-            sonarrService.refreshSeriesZhCNList();
+            sonarrService.refreshSeriesName();
         }
     }
 }
