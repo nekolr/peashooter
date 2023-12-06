@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -27,12 +26,7 @@ public class SeriesNameServiceImpl implements ISeriesNameService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveSeriesName(SeriesName seriesName) {
-        List<SeriesName> seriesNames = this.findAll();
-        Optional<SeriesName> op = seriesNames.stream()
-                .filter(sn -> sn.getTitleEn().equals(seriesName.getTitleEn())).findAny();
-        if (!op.isPresent()) {
-            seriesNameRepository.save(seriesName);
-        }
+        seriesNameRepository.save(seriesName);
     }
 
     @Override

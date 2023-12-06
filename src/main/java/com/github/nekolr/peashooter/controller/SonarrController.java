@@ -28,6 +28,12 @@ public class SonarrController {
         return JsonBean.ok(sonarrService.refreshSeriesName());
     }
 
+    @GetMapping("refresh-series-fully")
+    public JsonBean<Void> refreshSeriesFully() {
+        sonarrService.refreshSeriesFully();
+        return JsonBean.ok();
+    }
+
     @PostMapping("setupAllGroupIndexer")
     public JsonBean<Void> setupAllGroupIndexer() {
         return JsonBean.ok(sonarrService.setupAllGroupIndexer());

@@ -16,4 +16,7 @@ public interface ISonarrService {
     List<SeriesNameDto> refreshSeriesName();
 
     Boolean setupAllGroupIndexer();
+
+    @CacheEvict(key = "'all'", beforeInvocation = true)
+    void refreshSeriesFully();
 }

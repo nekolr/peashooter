@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,6 +91,42 @@ public class SonarrServiceImpl implements ISonarrService {
             List<SeriesNameDto> result = stream.collect(Collectors.toList());
             log.info("剧集信息刷新完毕");
             return result;
+        }
+    }
+
+    @Override
+    public void refreshSeriesFully() {
+        log.info("重新同步 sonarr 的剧集中文信息");
+        List<Series> seriesList = sonarrApi.getSeriesList();
+        if (CollectionUtils.isEmpty(seriesList)) {
+            log.info("没有获取到 sonarr 的剧集信息");
+        } else {
+            seriesList.stream().forEach(series -> {
+                String seriesId = series.id();
+                log.info("原始剧集信息：{}", series);
+                TvResult tvResult = null;
+                if (Objects.nonNull(series.imdbId())) {
+                    tvResult = theMovieDbApi.findByImdbId(series.imdbId());
+                } else if (Objects.nonNull(series.tvdbId())) {
+                    tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
+                }
+                if (Objects.nonNull(tvResult)) {
+                    log.info("获取到对应的中文剧集信息：{}", tvResult);
+                    if (StringUtils.hasText(tvResult.name())) {
+                        sonarrSeries.put(seriesId, new SeriesNameDto(seriesId, tvResult.name(), series.title()));
+                        SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
+                        if (Objects.nonNull(seriesName)) {
+                            if (!tvResult.name().equals(seriesName.getTitleZhCN())) {
+                                seriesName.setTitleZhCN(tvResult.name());
+                                seriesNameService.saveSeriesName(seriesName);
+                            }
+                        } else {
+                            seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResult.name()));
+                        }
+                    }
+                }
+            });
+            log.info("剧集信息刷新完毕");
         }
     }
 
