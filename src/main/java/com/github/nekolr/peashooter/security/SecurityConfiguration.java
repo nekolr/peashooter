@@ -17,7 +17,8 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    private final AccessAuthenticationFilter accessAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -45,7 +46,7 @@ public class SecurityConfiguration {
                                 // 主页可以匿名访问
                                 .requestMatchers(HttpMethod.GET, "/").anonymous()
                                 .requestMatchers(HttpMethod.GET, "/index.html").anonymous()
-                                // 登录请求不拦截（如果登录请求头包含 Authorization: Bearer 任意字符，那么还是会进行校验）
+                                // 登录请求不拦截
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                                 // 种子下载不拦截
                                 .requestMatchers(HttpMethod.GET, "/api/torrents").permitAll()
@@ -65,8 +66,8 @@ public class SecurityConfiguration {
                                 .anyRequest().authenticated());
 
         httpSecurity
-                // 添加登录和权限校验的两个过滤器
-                .addFilterBefore(accessAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }

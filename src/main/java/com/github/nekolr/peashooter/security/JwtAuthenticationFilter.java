@@ -1,12 +1,11 @@
 package com.github.nekolr.peashooter.security;
 
-import com.github.nekolr.peashooter.config.SettingsManager;
-import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import com.github.nekolr.peashooter.service.IUserService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,38 +19,25 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AccessAuthenticationFilter extends OncePerRequestFilter {
-
-    private static final String API_KEY_PARAM = "apiKey";
-    private static final String TOKEN_HEADER_KEY = "Authorization";
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final String TOKEN_HEADER_KEY = HttpHeaders.AUTHORIZATION;
+    private static final Pattern AUTHORIZATION_PATTERN = Pattern.compile("^Bearer (?<token>[a-zA-Z0-9-._~+/]+=*)$",
+            Pattern.CASE_INSENSITIVE);
     private static final String TOKEN_HEADER_VALUE_PREFIX = "Bearer ";
 
     private final IUserService userService;
-    private final UserSettings userSettings;
     private final TokenProvider tokenProvider;
-    private final SettingsManager settingsManager;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         this.handleJwt(request);
-        this.handleApiKey(request);
         chain.doFilter(request, response);
-    }
-
-    private void handleApiKey(HttpServletRequest request) {
-        String apiKey = request.getParameter(API_KEY_PARAM);
-        if (settingsManager.validApiKey(apiKey)) {
-            LoginUser loginUser = userService.findByUsername(userSettings.getUsername());
-            if (Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(loginUser, null, null);
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }
-        }
     }
 
     private void handleJwt(HttpServletRequest request) {
@@ -78,7 +64,11 @@ public class AccessAuthenticationFilter extends OncePerRequestFilter {
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(TOKEN_HEADER_KEY);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(TOKEN_HEADER_VALUE_PREFIX)) {
-            return bearerToken.substring(7);
+            Matcher matcher = AUTHORIZATION_PATTERN.matcher(bearerToken);
+            if (!matcher.matches()) {
+                return null;
+            }
+            return matcher.group("token");
         }
         return null;
     }

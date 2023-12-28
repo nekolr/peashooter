@@ -4,10 +4,11 @@ import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
 import com.github.nekolr.peashooter.controller.rsp.auth.LoginUserVo;
 import com.github.nekolr.peashooter.controller.rsp.auth.UserInfo;
-import com.github.nekolr.peashooter.security.MyContextHolder;
 import com.github.nekolr.peashooter.security.TokenProvider;
 import com.github.nekolr.peashooter.service.IUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -18,7 +19,6 @@ public class UserServiceImpl implements IUserService {
 
     private final UserSettings userSettings;
     private final TokenProvider tokenProvider;
-    private final MyContextHolder contextHolder;
 
     @Override
     public LoginUser findByUsername(String username) {
@@ -40,7 +40,9 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserInfo userinfo() {
-        String username = contextHolder.currentUser().getUsername();
+        SecurityContext context = SecurityContextHolder.getContextHolderStrategy().getContext();
+        LoginUser loginUser = (LoginUser) context.getAuthentication().getPrincipal();
+        String username = loginUser.getUsername();
         return new UserInfo(username);
     }
 }
