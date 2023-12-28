@@ -33,3 +33,8 @@ jwt:
   period: 1800s
 cors:
   allowOrigin: ${ALLOW_ORIGIN:http://localhost:8962}
+
+info:
+  app:
+    name: @project.artifactId@
+    version: @project.version@
