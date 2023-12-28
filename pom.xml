@@ -14,15 +14,15 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
+        <version>3.2.1</version>
     </parent>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <rome.version>2.1.0</rome.version>
         <jjwt.version>0.12.3</jjwt.version>
-        <fastjson.version>2.0.42</fastjson.version>
+        <fastjson.version>2.0.44</fastjson.version>
         <jodd-http.version>6.3.0</jodd-http.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
     </properties>
@@ -231,6 +231,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <id>add-resource</id>
