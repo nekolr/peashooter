@@ -2,7 +2,7 @@ package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.api.qb.QBittorrentApi;
 import com.github.nekolr.peashooter.api.qb.rsp.AppVersion;
-import com.github.nekolr.peashooter.api.sonarr.SonarrApi;
+import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
 import com.github.nekolr.peashooter.config.Settings;
 import com.github.nekolr.peashooter.config.Settings.*;
@@ -19,13 +19,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class SettingsServiceImpl implements ISettingsService {
 
-    private final SonarrApi sonarrApi;
+    private final SonarrV3Api sonarrV3Api;
     private final QBittorrentApi qBittorrentApi;
     private final SettingsManager settingsManager;
 
     @Override
     public boolean testSonarr() {
-        Status status = sonarrApi.getStatus();
+        Status status = sonarrV3Api.getStatus();
         return Objects.nonNull(status);
     }
 

@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.job.rename;
 
 import com.github.nekolr.peashooter.api.qb.QBittorrentApi;
-import com.github.nekolr.peashooter.api.sonarr.SonarrApi;
+import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.entity.domain.DownloadInfo;
 import com.github.nekolr.peashooter.service.IDownloadInfoService;
@@ -20,14 +20,14 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class RenameTorrentJob extends QuartzJobBean {
 
-    private final SonarrApi sonarrApi;
+    private final SonarrV3Api sonarrV3Api;
     private final QBittorrentApi qBittorrentApi;
     private final IDownloadInfoService downloadInfoService;
 
     @Override
     protected void executeInternal(JobExecutionContext context) {
         List<DownloadInfo> downloadInfoList = downloadInfoService.findAll();
-        List<Queue> queueList = sonarrApi.getQueueList();
+        List<Queue> queueList = sonarrV3Api.getQueueList();
         for (DownloadInfo info : downloadInfoList) {
             if (!CollectionUtils.isEmpty(queueList)) {
                 for (Queue queue : queueList) {

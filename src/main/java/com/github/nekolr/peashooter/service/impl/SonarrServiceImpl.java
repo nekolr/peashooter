@@ -1,6 +1,5 @@
 package com.github.nekolr.peashooter.service.impl;
 
-import com.github.nekolr.peashooter.api.sonarr.SonarrApi;
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
@@ -31,7 +30,6 @@ public class SonarrServiceImpl implements ISonarrService {
 
     private Map<String, SeriesNameDto> sonarrSeries = new ConcurrentHashMap();
 
-    private final SonarrApi sonarrApi;
     private final SonarrV3Api sonarrV3Api;
     private final TheMovieDbApi theMovieDbApi;
     private final SettingsManager settingsManager;
@@ -39,7 +37,7 @@ public class SonarrServiceImpl implements ISonarrService {
 
     @Override
     public List<SeriesNameDto> getSeriesNameList() {
-        List<Series> seriesList = sonarrApi.getSeriesList();
+        List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
             return Collections.emptyList();
         } else {
@@ -54,7 +52,7 @@ public class SonarrServiceImpl implements ISonarrService {
     @Override
     public List<SeriesNameDto> refreshSeriesName() {
         log.info("开始刷新 sonarr 的剧集中文信息");
-        List<Series> seriesList = sonarrApi.getSeriesList();
+        List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
             log.info("没有获取到 sonarr 的剧集信息");
             return Collections.emptyList();
@@ -98,7 +96,7 @@ public class SonarrServiceImpl implements ISonarrService {
     public void syncSeriesLatest() {
         final long REFRESH_COUNT = 100;
         log.info("重新同步 sonarr 最近 {} 部剧集的中文信息", REFRESH_COUNT);
-        List<Series> seriesList = sonarrApi.getSeriesList();
+        List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
             log.info("没有获取到 sonarr 的剧集信息");
         } else {

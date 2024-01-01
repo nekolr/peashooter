@@ -1,6 +1,6 @@
 package com.github.nekolr.peashooter.rss.convert;
 
-import com.github.nekolr.peashooter.api.sonarr.SonarrApi;
+import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.constant.Peashooter;
@@ -38,7 +38,8 @@ public class RssConvertorImpl implements RssConvertor {
     private static final String TORRENT_URI_PARAM_TITLE = "title";
     private static final String TORRENT_URI_PARAM_EPISODE = "episode";
     private static final String TORRENT_URI_PARAM_SEASON = "season";
-    private final SonarrApi sonarrApi;
+
+    private final SonarrV3Api sonarrV3Api;
     private final SettingsManager settingsManager;
     private Map<String, PubDateResolver> resolverMap;
 
@@ -78,7 +79,7 @@ public class RssConvertorImpl implements RssConvertor {
         Item item = null;
         String epTitle = FeedUtils.getTitle(entry);
         List<Matcher> matchers = ctx.matchers();
-        Series series = sonarrApi.getSeries(ctx.referenceId());
+        Series series = sonarrV3Api.getSeries(ctx.referenceId());
         if (Objects.isNull(series)) {
             log.warn("转换分组 {} 失败，Entry Title：{}", ctx.groupId(), epTitle);
             return null;
