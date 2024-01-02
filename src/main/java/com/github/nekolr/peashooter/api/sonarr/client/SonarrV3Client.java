@@ -34,6 +34,8 @@ public class SonarrV3Client implements SonarrV3Api {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_QUEUE_LIST_URI));
         request.query(API_KEY, apiKey);
+        request.query("page", 1);
+        request.query("pageSize", 50);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;

@@ -18,7 +18,7 @@ public interface SonarrV3Api {
 
     String GET_SERIES_URI = "/api/v3/series/{0}";
 
-    String GET_QUEUE_LIST_URI = "/api/queue";
+    String GET_QUEUE_LIST_URI = "/api/v3/queue";
 
     List<Queue> getQueueList();
 
