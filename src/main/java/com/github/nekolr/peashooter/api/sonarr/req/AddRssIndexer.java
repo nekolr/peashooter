@@ -30,22 +30,30 @@ public class AddRssIndexer {
         if (Objects.isNull(fields)) {
             fields = new ArrayList<>();
         }
-        fields.add(new Field("baseUrl", baseUrl));
+        fields.add(new Field("baseUrl", 0, "RSS URL", "textbox", null, false, "normal", false, baseUrl));
     }
 
     @Data
     @AllArgsConstructor
     public static class Field {
         private String name;
+        private Integer order;
+        private String label;
+        private String type;
+        private String unit;
+        private Boolean advanced;
+        private String privacy;
+        private Boolean isFloat;
         private Object value;
     }
 
     public void setupDefaultFields() {
-        fields.add(new Field("cookie", null));
-        fields.add(new Field("allowZeroSize", false));
-        fields.add(new Field("minimumSeeders", 1));
-        fields.add(new Field("eedCriteria.seedRatio", null));
-        fields.add(new Field("seedCriteria.seedTime", null));
-        fields.add(new Field("seedCriteria.seasonPackSeedTime", null));
+        fields.add(new Field("cookie", 1, "Cookie", "textbox", null, false, "normal", false, null));
+        fields.add(new Field("allowZeroSize", 2, "Allow Zero Size", "checkbox", null, false, "normal", false, true));
+        fields.add(new Field("minimumSeeders", 3, "Minimum Seeders", "number", null, true, "normal", false, 1));
+        fields.add(new Field("seedCriteria.seedRatio", 4, "Seed Ratio", "textbox", null, false, "normal", false, null));
+        fields.add(new Field("seedCriteria.seedTime", 5, "Seed Time", "number", "minutes", true, "normal", false, null));
+        fields.add(new Field("seedCriteria.seasonPackSeedTime", 6, "Season-Pack Seed Time", "number", "minutes", true, "normal", false, null));
+        fields.add(new Field("rejectBlocklistedTorrentHashesWhileGrabbing", 7, "Reject Blocklisted Torrent Hashes While Grabbing", "checkbox", null, true, "normal", false, false));
     }
 }

@@ -20,8 +20,6 @@ import org.springframework.stereotype.Component;
 import java.text.MessageFormat;
 import java.util.List;
 
-import static com.github.nekolr.peashooter.constant.Peashooter.API_KEY;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -33,7 +31,7 @@ public class SonarrV3Client implements SonarrV3Api {
     public List<Queue> getQueueList() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_QUEUE_LIST_URI));
-        request.query(API_KEY, apiKey);
+        request.header(X_API_KEY_HEADER_NAME, apiKey);
         request.query("page", 1);
         request.query("pageSize", 50);
         HttpResponse response = request.send();
@@ -47,7 +45,8 @@ public class SonarrV3Client implements SonarrV3Api {
     public Boolean addRssIndexer(AddRssIndexer indexer) {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.post(this.getUrl(ADD_INDEXER_URI));
-        request.query(API_KEY, apiKey);
+        request.header(X_API_KEY_HEADER_NAME, apiKey);
+        request.contentTypeJson();
         request.body(JSON.toJSONString(indexer));
         HttpResponse response = request.send();
         if (response.statusCode() == 201) {
@@ -62,7 +61,7 @@ public class SonarrV3Client implements SonarrV3Api {
     public Status getStatus() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_STATUS_URI));
-        request.query(API_KEY, apiKey);
+        request.header(X_API_KEY_HEADER_NAME, apiKey);
         try {
             HttpResponse response = request.send();
             if (response.statusCode() != 200)
@@ -78,7 +77,7 @@ public class SonarrV3Client implements SonarrV3Api {
     public List<Series> getSeriesList() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         HttpRequest request = HttpRequest.get(this.getUrl(GET_SERIES_LIST_URI));
-        request.query(API_KEY, apiKey);
+        request.header(X_API_KEY_HEADER_NAME, apiKey);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;
@@ -91,7 +90,7 @@ public class SonarrV3Client implements SonarrV3Api {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         String uri = MessageFormat.format(GET_SERIES_URI, id);
         HttpRequest request = HttpRequest.get(this.getUrl(uri));
-        request.query(API_KEY, apiKey);
+        request.header(X_API_KEY_HEADER_NAME, apiKey);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;

@@ -10,6 +10,8 @@ import java.util.List;
 
 public interface SonarrV3Api {
 
+    String X_API_KEY_HEADER_NAME = "X-Api-Key";
+
     String ADD_INDEXER_URI = "/api/v3/indexer";
 
     String GET_STATUS_URI = "/api/v3/system/status";
