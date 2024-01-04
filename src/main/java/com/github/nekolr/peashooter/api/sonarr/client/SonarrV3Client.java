@@ -34,6 +34,8 @@ public class SonarrV3Client implements SonarrV3Api {
         request.header(X_API_KEY_HEADER_NAME, apiKey);
         request.query("page", 1);
         request.query("pageSize", 50);
+        request.query("includeSeries", true);
+        request.query("includeEpisode", true);
         HttpResponse response = request.send();
         if (response.statusCode() != 200)
             return null;
