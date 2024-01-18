@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY . .
 RUN apt-get update \
     && apt install curl -y  \
-    && curl -sL https://deb.nodesource.com/setup_16.x | bash -  \
+    && curl -sL https://deb.nodesource.com/setup_20.x | bash -  \
     && apt-get install nodejs -y
 RUN mvn clean package
 
