@@ -7,7 +7,7 @@ import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
 import com.github.nekolr.peashooter.config.Settings;
 import com.github.nekolr.peashooter.config.Settings.*;
 import com.github.nekolr.peashooter.config.SettingsManager;
-import com.github.nekolr.peashooter.controller.req.settings.*;
+import com.github.nekolr.peashooter.controller.request.settings.*;
 import com.github.nekolr.peashooter.service.ISettingsService;
 import com.github.nekolr.peashooter.util.RandomUtil;
 import lombok.RequiredArgsConstructor;

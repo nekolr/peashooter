@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.controller.req.auth;
+package com.github.nekolr.peashooter.controller.request.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

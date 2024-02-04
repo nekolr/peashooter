@@ -1,6 +1,6 @@
 package com.github.nekolr.peashooter.security;
 
-import com.github.nekolr.peashooter.controller.req.auth.LoginUser;
+import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
 import com.github.nekolr.peashooter.service.IUserService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;

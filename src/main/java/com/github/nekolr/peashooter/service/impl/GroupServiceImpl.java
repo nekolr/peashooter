@@ -2,8 +2,8 @@ package com.github.nekolr.peashooter.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.config.SettingsManager;
-import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
-import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
+import com.github.nekolr.peashooter.controller.request.group.SaveGroup;
+import com.github.nekolr.peashooter.controller.request.group.GetGroupList;
 import com.github.nekolr.peashooter.entity.domain.Group;
 import com.github.nekolr.peashooter.entity.domain.GroupDataSource;
 import com.github.nekolr.peashooter.entity.mapper.GroupMapper;

@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.service;
 
-import com.github.nekolr.peashooter.controller.req.group.SaveGroup;
-import com.github.nekolr.peashooter.controller.req.group.GetGroupList;
+import com.github.nekolr.peashooter.controller.request.group.SaveGroup;
+import com.github.nekolr.peashooter.controller.request.group.GetGroupList;
 import com.github.nekolr.peashooter.entity.domain.Group;
 import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.Page;

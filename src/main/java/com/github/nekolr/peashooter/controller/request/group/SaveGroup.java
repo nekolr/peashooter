@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.controller.req.group;
+package com.github.nekolr.peashooter.controller.request.group;
 
 import com.github.nekolr.peashooter.rss.convert.Matcher;
 
