@@ -126,7 +126,7 @@ public class GroupServiceImpl implements IGroupService {
     @Override
     public void refreshRss(Long groupId) {
         Group group = this.getById(groupId);
-
+        List<Item> items = new ArrayList<>();
         List<Matcher> matchers = JSON.parseArray(group.getMatchersJson(), Matcher.class);
         ConvertContext convertContext = ConvertContext.builder()
                 .groupId(group.getId())
@@ -142,14 +142,16 @@ public class GroupServiceImpl implements IGroupService {
             SyndFeed syndFeed = FeedUtils.getFeed(rss);
             List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
             if (!CollectionUtils.isEmpty(entryList)) {
-                List<Item> items = entryList.stream()
-                        .map(syndEntry -> rssConvertor.convert(syndEntry, convertContext))
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-                String xml = rssConvertor.combine(items, group.getId());
-                rssWriter.write(xml, getGroupRssFilepath(group.getId()));
+                for (SyndEntry entry : entryList) {
+                    Item item = rssConvertor.convert(entry, convertContext);
+                    if (Objects.nonNull(item)) {
+                        items.add(item);
+                    }
+                }
             }
         }
+        String xml = rssConvertor.combine(items, group.getId());
+        rssWriter.write(xml, getGroupRssFilepath(group.getId()));
     }
 
     @Override
