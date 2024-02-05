@@ -1,6 +1,6 @@
 package com.github.nekolr.peashooter.entity.domain;
 
-import com.github.nekolr.peashooter.rss.convert.Matcher;
+import com.github.nekolr.peashooter.rss.convertor.Matcher;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 

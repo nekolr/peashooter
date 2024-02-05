@@ -9,11 +9,11 @@ import com.github.nekolr.peashooter.entity.domain.GroupDataSource;
 import com.github.nekolr.peashooter.entity.mapper.GroupMapper;
 import com.github.nekolr.peashooter.repository.GroupRepository;
 import com.github.nekolr.peashooter.rss.Item;
-import com.github.nekolr.peashooter.rss.convert.ConvertContext;
-import com.github.nekolr.peashooter.rss.convert.Matcher;
-import com.github.nekolr.peashooter.rss.convert.RssConvertor;
-import com.github.nekolr.peashooter.rss.load.RssLoader;
-import com.github.nekolr.peashooter.rss.write.RssWriter;
+import com.github.nekolr.peashooter.rss.convertor.ConvertContext;
+import com.github.nekolr.peashooter.rss.convertor.Matcher;
+import com.github.nekolr.peashooter.rss.convertor.RssConvertor;
+import com.github.nekolr.peashooter.rss.loader.RssLoader;
+import com.github.nekolr.peashooter.rss.writer.RssWriter;
 import com.github.nekolr.peashooter.service.IGroupDataSourceService;
 import com.github.nekolr.peashooter.service.IGroupService;
 import com.github.nekolr.peashooter.util.FeedUtils;
@@ -91,7 +91,7 @@ public class GroupServiceImpl implements IGroupService {
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         Page<Group> page = groupRepository.findAll(Example.of(group, matcher), pageable);
         List<Group> list = page.getContent();
-        list.stream().forEach(e -> e.setRssLink(getGroupLink(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
+        list.stream().forEach(e -> e.setRssLink(getGroupRssFileUrl(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
 
         return page;
     }
@@ -125,36 +125,36 @@ public class GroupServiceImpl implements IGroupService {
 
     @Override
     public void refreshRss(Long groupId) {
-        List<Item> items = new ArrayList<>();
         Group group = this.getById(groupId);
 
-        String quality = group.getQuality();
-        String language = group.getLanguage();
-        String referenceId = group.getReferenceId();
         List<Matcher> matchers = JSON.parseArray(group.getMatchersJson(), Matcher.class);
-        ConvertContext convertContext = new ConvertContext(group.getId(), referenceId, quality, language, matchers);
+        ConvertContext convertContext = ConvertContext.builder()
+                .groupId(group.getId())
+                .referenceId(group.getReferenceId())
+                .quality(group.getQuality())
+                .language(group.getLanguage())
+                .matchers(matchers)
+                .build();
 
         List<GroupDataSource> referenceDataSources = gdService.getByGroupId(group.getId());
         for (GroupDataSource ds : referenceDataSources) {
-            String rss = rssLoader.loadFromFile(getRssFilepath(ds.getDatasourceId(), false));
+            String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(ds.getDatasourceId()));
             SyndFeed syndFeed = FeedUtils.getFeed(rss);
             List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
             if (!CollectionUtils.isEmpty(entryList)) {
-                for (SyndEntry entry : entryList) {
-                    Item item = rssConvertor.convert(entry, convertContext);
-                    if (Objects.nonNull(item)) {
-                        items.add(item);
-                    }
-                }
+                List<Item> items = entryList.stream()
+                        .map(syndEntry -> rssConvertor.convert(syndEntry, convertContext))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                String xml = rssConvertor.combine(items, group.getId());
+                rssWriter.write(xml, getGroupRssFilepath(group.getId()));
             }
         }
-        String xml = rssConvertor.convert(items, group.getId());
-        rssWriter.write(xml, getRssFilepath(group.getId(), true));
     }
 
     @Override
     public String getRss(String filename) {
-        return rssLoader.loadFromFile(getRssFilepath(filename, true));
+        return rssLoader.loadFromFile(getGroupRssFilepath(filename));
     }
 
     @Override
@@ -163,7 +163,7 @@ public class GroupServiceImpl implements IGroupService {
         List<SyndEntry> entryList = new ArrayList<>();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
         for (Group group : groupList) {
-            String rss = rssLoader.loadFromFile(getRssFilepath(group.getId(), true));
+            String rss = rssLoader.loadFromFile(getGroupRssFilepath(group.getId()));
             SyndFeed feed = FeedUtils.getFeed(rss);
             entryList.addAll(FeedUtils.getEntries(feed));
         }

@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.rss.convert.resolver;
+package com.github.nekolr.peashooter.rss.convertor.resolver;
 
 import com.github.nekolr.peashooter.util.FeedUtils;
 import com.rometools.rome.feed.synd.SyndEntry;

@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.rss.write;
+package com.github.nekolr.peashooter.rss.writer;
 
 import jodd.io.FileUtil;
 import org.springframework.stereotype.Component;

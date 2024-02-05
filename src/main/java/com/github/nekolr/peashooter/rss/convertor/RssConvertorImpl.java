@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.rss.convert;
+package com.github.nekolr.peashooter.rss.convertor;
 
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
@@ -6,8 +6,8 @@ import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.constant.Peashooter;
 import com.github.nekolr.peashooter.rss.Enclosure;
 import com.github.nekolr.peashooter.rss.Item;
-import com.github.nekolr.peashooter.rss.convert.resolver.PubDateResolver;
-import com.github.nekolr.peashooter.rss.convert.resolver.PubDateType;
+import com.github.nekolr.peashooter.rss.convertor.resolver.PubDateResolver;
+import com.github.nekolr.peashooter.rss.convertor.resolver.PubDateType;
 import com.github.nekolr.peashooter.util.FeedUtils;
 import com.github.nekolr.peashooter.util.FillUpZeroUtil;
 import com.rometools.rome.feed.synd.SyndEnclosure;
@@ -33,25 +33,20 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 public class RssConvertorImpl implements RssConvertor {
 
     private static final String TORRENTS_URI = "/api/torrents";
-    private static final String TORRENT_URI_PARAM_SERIES = "series";
-    private static final String TORRENT_URI_PARAM_URL = "url";
-    private static final String TORRENT_URI_PARAM_TITLE = "title";
-    private static final String TORRENT_URI_PARAM_EPISODE = "episode";
-    private static final String TORRENT_URI_PARAM_SEASON = "season";
 
     private final SonarrV3Api sonarrV3Api;
     private final SettingsManager settingsManager;
     private Map<String, PubDateResolver> resolverMap;
 
     @Override
-    public String convert(List<Item> items, Long groupId) {
+    public String combine(List<Item> items, Long groupId) {
 
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
 
         SyndFeed syndFeed = FeedUtils.createFeed();
         FeedUtils.setFeedType(syndFeed, RSS_2_0);
         FeedUtils.setTitle(syndFeed, RSS_TITLE);
-        FeedUtils.setLink(syndFeed, getGroupLink(mappingUrl, groupId));
+        FeedUtils.setLink(syndFeed, getGroupRssFileUrl(mappingUrl, groupId));
         FeedUtils.setDescription(syndFeed, RSS_DESCRIPTION);
 
         List<SyndEntry> entries = new ArrayList<>(items.size());
@@ -138,16 +133,12 @@ public class RssConvertorImpl implements RssConvertor {
         try {
             title = URLEncoder.encode(title, CHARSET);
             return new StringBuilder(mappingUrl)
-                    .append(TORRENTS_URI).append(QUESTION)
-                    .append(TORRENT_URI_PARAM_URL).append(EQUALS).append(url)
-                    .append(AND)
-                    .append(TORRENT_URI_PARAM_TITLE).append(EQUALS).append(title)
-                    .append(AND)
-                    .append(TORRENT_URI_PARAM_EPISODE).append(EQUALS).append(episode)
-                    .append(AND)
-                    .append(TORRENT_URI_PARAM_SEASON).append(EQUALS).append(season)
-                    .append(AND)
-                    .append(TORRENT_URI_PARAM_SERIES).append(EQUALS).append(series)
+                    .append(TORRENTS_URI)
+                    .append("?url=").append(url)
+                    .append("&title=").append(title)
+                    .append("&episode=").append(episode)
+                    .append("&season=").append(season)
+                    .append("&series=").append(series)
                     .toString();
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);

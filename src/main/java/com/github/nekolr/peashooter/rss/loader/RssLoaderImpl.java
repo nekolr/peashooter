@@ -1,4 +1,4 @@
-package com.github.nekolr.peashooter.rss.load;
+package com.github.nekolr.peashooter.rss.loader;
 
 
 import com.github.nekolr.peashooter.config.SettingsManager;

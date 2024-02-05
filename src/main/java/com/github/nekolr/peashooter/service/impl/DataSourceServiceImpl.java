@@ -7,9 +7,9 @@ import com.github.nekolr.peashooter.controller.response.datasource.MatchResult;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
-import com.github.nekolr.peashooter.rss.convert.Matcher;
-import com.github.nekolr.peashooter.rss.load.RssLoader;
-import com.github.nekolr.peashooter.rss.write.RssWriter;
+import com.github.nekolr.peashooter.rss.convertor.Matcher;
+import com.github.nekolr.peashooter.rss.loader.RssLoader;
+import com.github.nekolr.peashooter.rss.writer.RssWriter;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import com.github.nekolr.peashooter.util.FeedUtils;
 import com.github.nekolr.peashooter.util.FillUpZeroUtil;
@@ -97,7 +97,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
                 if (!Objects.equals(sign, dataSource.getSignature())) {
                     dataSource.setSignature(sign);
                     this.save(dataSource);
-                    rssWriter.write(xml, getRssFilepath(id, false));
+                    rssWriter.write(xml, getDatasourceRssFilepath(id));
                     refreshed = true;
                 }
             }
@@ -111,7 +111,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
         if (Objects.isNull(dataSource)) {
             return Collections.emptyList();
         } else {
-            String xml = rssLoader.loadFromFile(getRssFilepath(id, false));
+            String xml = rssLoader.loadFromFile(getDatasourceRssFilepath(id));
             SyndFeed feed = FeedUtils.getFeed(xml);
             List<SyndEntry> entries = FeedUtils.getEntries(feed);
             List<ItemTitle> result = new ArrayList<>(entries.size());

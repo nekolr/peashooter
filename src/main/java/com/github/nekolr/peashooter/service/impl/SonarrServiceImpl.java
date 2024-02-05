@@ -135,7 +135,7 @@ public class SonarrServiceImpl implements ISonarrService {
     public Boolean setupAllGroupIndexer() {
         String apiKey = settingsManager.get().getBasic().getApiKey();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
-        String baseUrl = getAllGroupLink(mappingUrl) + QUESTION + API_KEY + EQUALS + apiKey;
+        String baseUrl = getAllGroupLink(mappingUrl) + "?apiKey=" + apiKey;
         AddRssIndexer indexer = new AddRssIndexer(APPLICATION_NAME, baseUrl);
         indexer.setupDefaultFields();
         return sonarrV3Api.addRssIndexer(indexer);
