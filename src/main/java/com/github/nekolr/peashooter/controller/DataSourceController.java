@@ -52,8 +52,9 @@ public class DataSourceController {
     }
 
     @GetMapping("getItemTitles")
-    public JsonBean<List<ItemTitle>> getItemTitleList(@RequestParam("id") Long id) {
-        return JsonBean.ok(dataSourceService.getItemTitleList(id));
+    public JsonBean<List<ItemTitle>> getItemTitleList(@RequestParam("id") Long id,
+                                                      @RequestParam(value = "title", required = false) String title) {
+        return JsonBean.ok(dataSourceService.getItemTitleList(id, title));
     }
 
     @PostMapping("testRegexp")

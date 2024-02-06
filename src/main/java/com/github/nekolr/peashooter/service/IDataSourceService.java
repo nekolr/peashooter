@@ -31,7 +31,7 @@ public interface IDataSourceService {
     @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     boolean refreshRss(Long id);
 
-    List<ItemTitle> getItemTitleList(Long id);
+    List<ItemTitle> getItemTitleList(Long id, String title);
 
     List<MatchResult> testRegexp(TestRegexp cmd);
 }

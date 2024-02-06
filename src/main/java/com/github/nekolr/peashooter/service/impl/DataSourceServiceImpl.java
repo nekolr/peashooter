@@ -106,7 +106,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
-    public List<ItemTitle> getItemTitleList(Long id) {
+    public List<ItemTitle> getItemTitleList(Long id, String title) {
         DataSource dataSource = this.getById(id);
         if (Objects.isNull(dataSource)) {
             return Collections.emptyList();
@@ -115,9 +115,15 @@ public class DataSourceServiceImpl implements IDataSourceService {
             SyndFeed feed = FeedUtils.getFeed(xml);
             List<SyndEntry> entries = FeedUtils.getEntries(feed);
             List<ItemTitle> result = new ArrayList<>(entries.size());
-            for (int i = 0; i < entries.size(); i++) {
-                SyndEntry entry = entries.get(i);
-                result.add(new ItemTitle(i + 1, FeedUtils.getTitle(entry)));
+            boolean findTitle = StringUtils.hasText(title);
+            int idx = 0;
+            for (SyndEntry entry : entries) {
+                String seriesTitle = FeedUtils.getTitle(entry);
+                if (!findTitle) {
+                    result.add(new ItemTitle(++idx, seriesTitle));
+                } else if (seriesTitle.contains(title)) {
+                    result.add(new ItemTitle(++idx, seriesTitle));
+                }
             }
             return result;
         }
@@ -128,7 +134,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
         List<ItemTitle> itemTitles = new ArrayList<>(0);
         if (Objects.nonNull(cmd.dataSourceIds()) && cmd.dataSourceIds().length > 0) {
             Stream<ItemTitle> stream = Arrays.stream(cmd.dataSourceIds())
-                    .flatMap(id -> this.getItemTitleList(Long.valueOf(id)).stream());
+                    .flatMap(id -> this.getItemTitleList(Long.valueOf(id), null).stream());
             itemTitles = stream.collect(Collectors.toList());
         }
         int count = 0;
