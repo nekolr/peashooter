@@ -63,19 +63,25 @@ public class SonarrServiceImpl implements ISonarrService {
                     log.info("原始剧集信息：{}", series);
                     SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
                     if (Objects.isNull(seriesName)) {
-                        TvResult tvResult = null;
+                        TvResult tvResult;
                         if (Objects.nonNull(series.imdbId())) {
                             tvResult = theMovieDbApi.findByImdbId(series.imdbId());
                         } else if (Objects.nonNull(series.tvdbId())) {
                             tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
+                        } else {
+                            tvResult = null;
                         }
                         if (Objects.nonNull(tvResult)) {
                             log.info("获取到对应的中文剧集信息：{}", tvResult);
-                            sonarrSeries.put(seriesId, new SeriesNameDto(seriesId, tvResult.name(), series.title()));
-                            seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResult.name()));
+                            sonarrSeries.computeIfAbsent(seriesId, k -> {
+                                SeriesNameDto seriesNameDto = new SeriesNameDto(seriesId, tvResult.name(), series.title());
+                                sonarrSeries.put(seriesId, seriesNameDto);
+                                seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResult.name()));
+                                return seriesNameDto;
+                            });
                         } else {
                             log.warn("没有获取到剧集 {} 对应的中文信息", series.title());
-                            sonarrSeries.put(seriesId, new SeriesNameDto(seriesId, series.title(), series.title()));
+                            sonarrSeries.putIfAbsent(seriesId, new SeriesNameDto(seriesId, series.title(), series.title()));
                         }
                     } else {
                         log.info("加载本地剧集信息：{}", seriesName);
