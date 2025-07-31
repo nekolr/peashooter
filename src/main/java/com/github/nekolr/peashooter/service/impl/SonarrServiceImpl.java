@@ -28,7 +28,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 @RequiredArgsConstructor
 public class SonarrServiceImpl implements ISonarrService {
 
-    private Map<String, SeriesNameDto> sonarrSeries = new ConcurrentHashMap();
+    private final Map<String, SeriesNameDto> sonarrSeries = new ConcurrentHashMap<>();
 
     private final SonarrV3Api sonarrV3Api;
     private final TheMovieDbApi theMovieDbApi;
@@ -63,19 +63,11 @@ public class SonarrServiceImpl implements ISonarrService {
                     log.info("原始剧集信息：{}", series);
                     SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
                     if (Objects.isNull(seriesName)) {
-                        TvResult tvResult;
-                        if (Objects.nonNull(series.imdbId())) {
-                            tvResult = theMovieDbApi.findByImdbId(series.imdbId());
-                        } else if (Objects.nonNull(series.tvdbId())) {
-                            tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
-                        } else {
-                            tvResult = null;
-                        }
+                        TvResult tvResult = this.getTvResult(series);
                         if (Objects.nonNull(tvResult)) {
                             log.info("获取到对应的中文剧集信息：{}", tvResult);
                             sonarrSeries.computeIfAbsent(seriesId, k -> {
                                 SeriesNameDto seriesNameDto = new SeriesNameDto(seriesId, tvResult.name(), series.title());
-                                sonarrSeries.put(seriesId, seriesNameDto);
                                 seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResult.name()));
                                 return seriesNameDto;
                             });
@@ -111,12 +103,7 @@ public class SonarrServiceImpl implements ISonarrService {
             seriesList.stream().sorted(comparator).limit(REFRESH_COUNT).forEach(series -> {
                 String seriesId = series.id();
                 log.info("原始剧集信息：{}", series);
-                TvResult tvResult = null;
-                if (Objects.nonNull(series.imdbId())) {
-                    tvResult = theMovieDbApi.findByImdbId(series.imdbId());
-                } else if (Objects.nonNull(series.tvdbId())) {
-                    tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
-                }
+                TvResult tvResult = this.getTvResult(series);
                 if (Objects.nonNull(tvResult)) {
                     log.info("获取到对应的中文剧集信息：{}", tvResult);
                     if (StringUtils.hasText(tvResult.name())) {
@@ -135,6 +122,15 @@ public class SonarrServiceImpl implements ISonarrService {
             });
             log.info("剧集信息同步完毕");
         }
+    }
+
+    private TvResult getTvResult(Series series) {
+        if (Objects.nonNull(series.imdbId())) {
+            return theMovieDbApi.findByImdbId(series.imdbId());
+        } else if (Objects.nonNull(series.tvdbId())) {
+            return theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
+        }
+        return null;
     }
 
     @Override
