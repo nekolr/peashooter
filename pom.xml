@@ -25,6 +25,7 @@
         <fastjson.version>2.0.56</fastjson.version>
         <jodd-http.version>6.3.0</jodd-http.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <fuzzywuzzy.version>1.4.0</fuzzywuzzy.version>
     </properties>
 
     <profiles>
@@ -53,6 +54,11 @@
     </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -133,6 +139,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>me.xdrop</groupId>
+            <artifactId>fuzzywuzzy</artifactId>
+            <version>${fuzzywuzzy.version}</version>
         </dependency>
     </dependencies>
 

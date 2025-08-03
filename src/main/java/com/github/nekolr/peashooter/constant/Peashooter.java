@@ -13,6 +13,7 @@ public interface Peashooter {
     String MI_KAN_URL = "https://mikanani.me";
     String VERSION = "0.0.1";
     String RSS_DESCRIPTION = "rss convertor";
+    String AUTOMATED = "automated";
     String APPLICATION_NAME = Peashooter.class.getSimpleName();
     String RSS_TITLE = APPLICATION_NAME + " " + VERSION;
 
@@ -95,6 +96,10 @@ public interface Peashooter {
         return CONVERTED_RSS_FILE_DIR + groupId + XML_SUFFIX;
     }
 
+    static String getAutomatedGroupRssFilepath() {
+        return CONVERTED_RSS_FILE_DIR + AUTOMATED + XML_SUFFIX;
+    }
+
     static String getDatasourceRssFilepath(Long datasourceId) {
         return ORIGINAL_RSS_FILE_DIR + datasourceId + XML_SUFFIX;
     }
@@ -105,6 +110,10 @@ public interface Peashooter {
 
     static String getGroupRssFileUrl(String mappingUrl, Long groupId) {
         return mappingUrl + "/api/group/" + groupId + XML_SUFFIX;
+    }
+
+    static String getAutomatedGroupRssFileUrl(String mappingUrl) {
+        return mappingUrl + "/api/group/" + AUTOMATED + XML_SUFFIX;
     }
 
     static String getAllGroupLink(String mappingUrl) {

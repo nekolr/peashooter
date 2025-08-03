@@ -4,6 +4,7 @@ import com.github.nekolr.peashooter.entity.domain.GroupDataSource;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import com.github.nekolr.peashooter.service.IGroupDataSourceService;
 import com.github.nekolr.peashooter.service.IGroupService;
+import com.github.nekolr.peashooter.service.IRawParserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDataMap;
@@ -20,6 +21,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 @RequiredArgsConstructor
 public class RssRefreshJob extends QuartzJobBean {
     private final IGroupService groupService;
+    private final IRawParserService rawParserService;
     private final IGroupDataSourceService gdService;
     private final IDataSourceService dataSourceService;
 
@@ -37,6 +39,8 @@ public class RssRefreshJob extends QuartzJobBean {
                 log.info("刷新分组：{} 的转换结果", referenceGroup.getGroupId());
                 groupService.refreshRss(referenceGroup.getGroupId());
             }
+            log.info("刷新分组完毕，开始执行自动解析转换任务");
+            rawParserService.autoParse(datasourceId);
             log.info("刷新任务执行结束");
             return;
         }

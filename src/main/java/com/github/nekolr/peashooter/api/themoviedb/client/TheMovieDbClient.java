@@ -2,8 +2,9 @@ package com.github.nekolr.peashooter.api.themoviedb.client;
 
 import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindSeries;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindSeries.TvResult;
+import com.github.nekolr.peashooter.api.themoviedb.rsp.FindAliasTitle;
+import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
+import com.github.nekolr.peashooter.api.themoviedb.rsp.FindByKeyword;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import jodd.http.HttpException;
 import jodd.http.HttpRequest;
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -34,28 +38,59 @@ public class TheMovieDbClient implements TheMovieDbApi {
 
     @Override
     @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
-    public TvResult findByImdbId(String imdbId) {
-        return this.getTvResult(imdbId, DEFAULT_EXTERNAL_SOURCE);
+    public FindById.TvResult findByImdbId(String imdbId) {
+        return this.findById(imdbId, DEFAULT_EXTERNAL_SOURCE);
     }
 
     @Override
     @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
-    public TvResult findByTvdbId(String tvdbId) {
-        return this.getTvResult(tvdbId, TVDB_EXTERNAL_SOURCE);
+    public FindById.TvResult findByTvdbId(String tvdbId) {
+        return this.findById(tvdbId, TVDB_EXTERNAL_SOURCE);
     }
 
-    private TvResult getTvResult(String id, String externalSource) {
+    @Override
+    public FindByKeyword.TvResult findByKeyword(String keyword) {
         String apiKey = settingsManager.get().getTheMovieDb().getApiKey();
         Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
-        String uri = MessageFormat.format(FIND_SERIES_URI, id);
+        String uri = MessageFormat.format(FIND_BY_KEYWORD_URI, keyword);
         HttpRequest request = HttpRequest.get(this.getUrl(uri));
         request.query(FIND_SERIES_URI_PARAM_API_KEY, apiKey);
-        request.query(FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE, externalSource);
-        request.query(FIND_SERIES_URI_PARAM_LANGUAGE, DEFAULT_LANGUAGE);
-        return this.doSend(request, useProxy);
+        return this.doFindByKeyword(request, useProxy);
     }
 
-    private TvResult doSend(HttpRequest request, boolean useProxy) {
+    @Override
+    public List<FindAliasTitle.Title> findAliasTitles(Integer seriesId) {
+        String apiKey = settingsManager.get().getTheMovieDb().getApiKey();
+        Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
+        String uri = MessageFormat.format(FIND_ALIAS_TITLE_URI, String.valueOf(seriesId));
+        HttpRequest request = HttpRequest.get(this.getUrl(uri));
+        request.query(FIND_SERIES_URI_PARAM_API_KEY, apiKey);
+        if (useProxy) {
+            this.setupProxy(request);
+        }
+        HttpResponse response = request.send();
+        if (response.statusCode() != 200) {
+            return Collections.emptyList();
+        }
+        FindAliasTitle findAliasTitle = JSON.parseObject(response.bodyText(), FindAliasTitle.class);
+        if (!CollectionUtils.isEmpty(findAliasTitle.results())) {
+            return findAliasTitle.results();
+        }
+        return Collections.emptyList();
+    }
+
+    private FindById.TvResult findById(String id, String externalSource) {
+        String apiKey = settingsManager.get().getTheMovieDb().getApiKey();
+        Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
+        String uri = MessageFormat.format(FIND_BY_ID_URI, id);
+        HttpRequest request = HttpRequest.get(this.getUrl(uri));
+        request.query(FIND_SERIES_URI_PARAM_API_KEY, apiKey);
+        request.query(FIND_SERIES_URI_PARAM_LANGUAGE, DEFAULT_LANGUAGE);
+        request.query(FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE, externalSource);
+        return this.doFindById(request, useProxy);
+    }
+
+    private FindById.TvResult doFindById(HttpRequest request, boolean useProxy) {
         if (useProxy) {
             this.setupProxy(request);
         }
@@ -63,9 +98,27 @@ public class TheMovieDbClient implements TheMovieDbApi {
         if (response.statusCode() != 200) {
             return null;
         }
-        FindSeries findSeries = JSON.parseObject(response.bodyText(), FindSeries.class);
-        if (!CollectionUtils.isEmpty(findSeries.tv_results())) {
-            return findSeries.tv_results().get(0);
+        FindById findById = JSON.parseObject(response.bodyText(), FindById.class);
+        if (!CollectionUtils.isEmpty(findById.tv_results())) {
+            return findById.tv_results().getFirst();
+        }
+        return null;
+    }
+
+    private FindByKeyword.TvResult doFindByKeyword(HttpRequest request, boolean useProxy) {
+        if (useProxy) {
+            this.setupProxy(request);
+        }
+        HttpResponse response = request.send();
+        if (response.statusCode() != 200) {
+            return null;
+        }
+        FindByKeyword findByKeyword = JSON.parseObject(response.bodyText(), FindByKeyword.class);
+        if (!CollectionUtils.isEmpty(findByKeyword.results())) {
+            FindByKeyword.TvResult tvResult = findByKeyword.results().getFirst();
+            if (Arrays.asList(tvResult.genre_ids()).contains("16")) {
+                return tvResult;
+            }
         }
         return null;
     }

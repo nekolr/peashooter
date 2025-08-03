@@ -169,6 +169,12 @@ public class GroupServiceImpl implements IGroupService {
             SyndFeed feed = FeedUtils.getFeed(rss);
             entryList.addAll(FeedUtils.getEntries(feed));
         }
+
+        // 加上自动转换分组
+        String autoRss = rssLoader.loadFromFile(getAutomatedGroupRssFilepath());
+        SyndFeed autoFeed = FeedUtils.getFeed(autoRss);
+        entryList.addAll(FeedUtils.getEntries(autoFeed));
+
         SyndFeed syndFeed = FeedUtils.createFeed();
         FeedUtils.setFeedType(syndFeed, RSS_2_0);
         FeedUtils.setTitle(syndFeed, RSS_TITLE);

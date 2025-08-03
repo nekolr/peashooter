@@ -4,7 +4,7 @@ import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindSeries.TvResult;
+import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.entity.domain.SeriesName;
 import com.github.nekolr.peashooter.entity.dto.SeriesNameDto;
@@ -63,7 +63,7 @@ public class SonarrServiceImpl implements ISonarrService {
                     log.info("原始剧集信息：{}", series);
                     SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
                     if (Objects.isNull(seriesName)) {
-                        TvResult tvResult = this.getTvResult(series);
+                        FindById.TvResult tvResult = this.findTvById(series);
                         if (Objects.nonNull(tvResult)) {
                             log.info("获取到对应的中文剧集信息：{}", tvResult);
                             sonarrSeries.computeIfAbsent(seriesId, k -> {
@@ -103,7 +103,7 @@ public class SonarrServiceImpl implements ISonarrService {
             seriesList.stream().sorted(comparator).limit(REFRESH_COUNT).forEach(series -> {
                 String seriesId = series.id();
                 log.info("原始剧集信息：{}", series);
-                TvResult tvResult = this.getTvResult(series);
+                FindById.TvResult tvResult = this.findTvById(series);
                 if (Objects.nonNull(tvResult)) {
                     log.info("获取到对应的中文剧集信息：{}", tvResult);
                     if (StringUtils.hasText(tvResult.name())) {
@@ -124,7 +124,7 @@ public class SonarrServiceImpl implements ISonarrService {
         }
     }
 
-    private TvResult getTvResult(Series series) {
+    private FindById.TvResult findTvById(Series series) {
         if (Objects.nonNull(series.imdbId())) {
             return theMovieDbApi.findByImdbId(series.imdbId());
         } else if (Objects.nonNull(series.tvdbId())) {
