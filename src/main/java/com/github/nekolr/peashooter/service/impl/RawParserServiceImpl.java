@@ -43,7 +43,7 @@ public class RawParserServiceImpl implements IRawParserService {
 
     private static final String DEFAULT_LANGUAGE = "Chinese";
     private static final String DEFAULT_QUALITY = "WEBDL-1080p";
-    private static final String EXCLUDE_SOURCE = "CR";
+    private static final List<String> EXCLUDE_SOURCES = List.of("CR", "BILIBILI");
     private static final long DEFAULT_VALID_SECONDS = 432000; // 5 天
 
     private static final String SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH = HOME_DIR + File.separator + "sonarr-id-alias-title-cached.json";
@@ -78,49 +78,25 @@ public class RawParserServiceImpl implements IRawParserService {
                 try {
                     log.info("开始解析种子标题: {}", title);
                     RawParser.Episode episode = RawParser.parse(title);
-                    // 跳过 CR 源，因为没中文字幕
-                    if (EXCLUDE_SOURCE.equals(episode.source())) {
-                        log.info("跳过 CR 源的剧集: {}", episode);
-                        continue;
+                    if (Objects.nonNull(episode.source())) {
+                        if (EXCLUDE_SOURCES.contains(episode.source().toUpperCase())) {
+                            log.info("跳过 {} 源，通过种子标题解析出的信息为: {}", String.join(",", EXCLUDE_SOURCES), episode);
+                            continue;
+                        }
                     }
-                    Item item = null;
+                    String seriesId = null;
                     for (Series series : monitoredSeries) {
-
-                        if (this.equalsTitle(episode.titleInfo().name(), series.title())) {
-                            log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                            item = this.parseEntry(entry, series, episode);
-                            items.add(item);
-                            break;
-                        }
-
-                        if (this.similarTitle(episode.titleInfo().name(), series.title())) {
-                            log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                            item = this.parseEntry(entry, series, episode);
-                            items.add(item);
-                            break;
-                        }
-
-                        List<FindAliasTitle.Title> titleList = this.sonarrIdTitleMap.get(series.id());
-                        String [] titles = titleList.stream().map(FindAliasTitle.Title::title).toArray(String[]::new);
-
-                        if (this.equalsTitle(episode.titleInfo().name(), titles)) {
-                            log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                            item = this.parseEntry(entry, series, episode);
-                            items.add(item);
-                            break;
-                        }
-
-                        if (this.similarTitle(episode.titleInfo().name(), titles)) {
-                            log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                            item = this.parseEntry(entry, series, episode);
-                            items.add(item);
-                            break;
+                        Optional<Item> optionalItem = this.getItem(episode, series, entry);
+                        if (optionalItem.isPresent()) {
+                            seriesId = series.id();
+                            items.add(optionalItem.get());
                         }
                     }
 
-                    if (Objects.isNull(item)) {
+                    if (Objects.isNull(seriesId)) {
                         log.warn("未匹配到剧集，通过种子标题解析出的信息为: {}", episode);
                     }
+
                 } catch (ParseTitleException e) {
                     log.error("解析标题失败: {}", title);
                 }
@@ -136,6 +112,34 @@ public class RawParserServiceImpl implements IRawParserService {
                 }
             }
         }
+    }
+
+    private Optional<Item> getItem(RawParser.Episode episode, Series series, SyndEntry entry) {
+
+        if (this.equalsTitle(episode.titleInfo().name(), series.title())) {
+            log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+            return Optional.of(this.parseEntry(entry, series, episode));
+        }
+
+        if (this.similarTitle(episode.titleInfo().name(), series.title())) {
+            log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+            return Optional.of(this.parseEntry(entry, series, episode));
+        }
+
+        List<FindAliasTitle.Title> titleList = this.sonarrIdTitleMap.get(series.id());
+        String[] titles = titleList.stream().map(FindAliasTitle.Title::title).toArray(String[]::new);
+
+        if (this.equalsTitle(episode.titleInfo().name(), titles)) {
+            log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+            return Optional.of(this.parseEntry(entry, series, episode));
+        }
+
+        if (this.similarTitle(episode.titleInfo().name(), titles)) {
+            log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+            return Optional.of(this.parseEntry(entry, series, episode));
+        }
+
+        return Optional.empty();
     }
 
     private void cachedSonarrIdTitleMap(List<Series> monitoredSeries) {
@@ -210,9 +214,30 @@ public class RawParserServiceImpl implements IRawParserService {
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
 
         int episodeNum = episode.episodeInfo().episode();
-        int season = episode.seasonInfo().season();
+        int seasonNum = episode.seasonInfo().season();
+
         String episodeStr = String.valueOf(episodeNum);
-        String title = EpisodeTitleUtil.formatEpisodeTitle(series.title(), season, episodeStr, DEFAULT_QUALITY, DEFAULT_LANGUAGE);
+
+        // 如果不是第一季，则可能需要计算相对集数（区别于绝对集数）
+        if (seasonNum > 1) {
+            Series seriesDetail = sonarrV3Api.getSeries(series.id());
+            if (!CollectionUtils.isEmpty(seriesDetail.seasons())) {
+                Integer preEpisodeNumbers = seriesDetail.seasons().stream()
+                        // 去掉特典
+                        .filter(season -> !season.seasonNumber().equals(0))
+                        .sorted(Comparator.comparing(Series.Season::seasonNumber))
+                        .limit(episode.seasonInfo().season() - 1)
+                        .map(season -> season.statistics().totalEpisodeCount())
+                        .reduce(0, Integer::sum);
+                if (episode.episodeInfo().episode() > preEpisodeNumbers) {
+                    // 计算相对集数
+                    int relativeEpisode = episodeNum - preEpisodeNumbers;
+                    episodeStr = String.valueOf(relativeEpisode);
+                }
+            }
+        }
+
+        String title = EpisodeTitleUtil.formatEpisodeTitle(series.title(), seasonNum, episodeStr, DEFAULT_QUALITY, DEFAULT_LANGUAGE);
 
         String link = FeedUtils.getLink(entry);
         String guid = FeedUtils.getUri(entry);
@@ -221,7 +246,7 @@ public class RawParserServiceImpl implements IRawParserService {
 
         List<SyndEnclosure> enclosures = FeedUtils.getEnclosures(entry);
         SyndEnclosure first = enclosures.getFirst();
-        String url = GetTorrentLinkUtil.formatLink(mappingUrl, first.getUrl(), title, episodeStr, season, series.id());
+        String url = GetTorrentLinkUtil.formatLink(mappingUrl, first.getUrl(), title, episodeStr, seasonNum, series.id());
 
         Enclosure enclosure = new Enclosure(url, first.getLength(), first.getType());
         return new Item(title, link, pubDate, guid, enclosure);
@@ -240,6 +265,7 @@ public class RawParserServiceImpl implements IRawParserService {
 
     /**
      * 缓存 Sonarr ID 和别名标题的映射关系
+     *
      * @param titles
      * @param timestamp
      */
@@ -249,6 +275,7 @@ public class RawParserServiceImpl implements IRawParserService {
 
     /**
      * Sonarr ID 和别名标题的映射关系
+     *
      * @param sonarrId
      * @param titles
      */
