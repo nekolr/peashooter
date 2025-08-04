@@ -96,7 +96,7 @@ public class RssConvertorImpl implements RssConvertor {
                 String url = GetTorrentLinkUtil.formatLink(mappingUrl, first.getUrl(), epTitle, episodeNum, season, referenceId);
 
                 Enclosure enclosure = new Enclosure(url, first.getLength(), first.getType());
-                item = new Item(epTitle, link, pubDate, guid, enclosure);
+                item = new Item(epTitle, link, pubDate, guid, enclosure, series.id(), season, Integer.parseInt(episodeNum), null);
             }
         }
         return item;

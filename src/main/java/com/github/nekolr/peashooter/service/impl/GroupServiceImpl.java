@@ -31,7 +31,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.*;
 import static com.github.nekolr.peashooter.constant.Peashooter.RSS_DESCRIPTION;
@@ -65,8 +64,11 @@ public class GroupServiceImpl implements IGroupService {
     @Override
     public Group getById(Long id) {
         Group group = groupRepository.findById(id).orElse(null);
+        if (Objects.isNull(group)) {
+            throw new RuntimeException("group not found, id: " + id);
+        }
         List<GroupDataSource> gdList = gdService.getByGroupId(group.getId());
-        List<Long> dsList = gdList.stream().map(GroupDataSource::getDatasourceId).collect(Collectors.toList());
+        List<Long> dsList = gdList.stream().map(GroupDataSource::getDatasourceId).toList();
         group.setDataSourceIds(dsList.toArray(new Long[dsList.size()]));
         group.setMatchers(JSON.parseArray(group.getMatchersJson(), Matcher.class));
         return group;
@@ -170,6 +172,9 @@ public class GroupServiceImpl implements IGroupService {
             entryList.addAll(FeedUtils.getEntries(feed));
         }
 
+        // 先将分组转换的结果去重
+        entryList = this.distinct(entryList);
+
         // 加上自动转换分组
         String autoRss = rssLoader.loadFromFile(getAutomatedGroupRssFilepath());
         SyndFeed autoFeed = FeedUtils.getFeed(autoRss);
@@ -180,7 +185,7 @@ public class GroupServiceImpl implements IGroupService {
         FeedUtils.setTitle(syndFeed, RSS_TITLE);
         FeedUtils.setLink(syndFeed, getAllGroupLink(mappingUrl));
         FeedUtils.setDescription(syndFeed, RSS_DESCRIPTION);
-        FeedUtils.setEntries(syndFeed, this.distinct(entryList));
+        FeedUtils.setEntries(syndFeed, entryList);
         return FeedUtils.writeString(syndFeed);
     }
 
@@ -197,6 +202,6 @@ public class GroupServiceImpl implements IGroupService {
                 }
             }
         }
-        return dictionary.values().stream().collect(Collectors.toList());
+        return new ArrayList<>(dictionary.values());
     }
 }

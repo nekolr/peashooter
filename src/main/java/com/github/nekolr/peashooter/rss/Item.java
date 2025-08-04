@@ -5,6 +5,6 @@ import java.util.Date;
 /**
  * Rss Item Element
  */
-public record Item(String title, String link, Date pubDate, String guid, Enclosure enclosure) {
+public record Item(String title, String link, Date pubDate, String guid, Enclosure enclosure, String seriesId, int season, int episode, String source) {
 
 }

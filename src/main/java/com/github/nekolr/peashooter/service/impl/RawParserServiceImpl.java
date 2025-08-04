@@ -43,7 +43,8 @@ public class RawParserServiceImpl implements IRawParserService {
 
     private static final String DEFAULT_LANGUAGE = "Chinese";
     private static final String DEFAULT_QUALITY = "WEBDL-1080p";
-    private static final List<String> EXCLUDE_SOURCES = List.of("CR", "BILIBILI");
+    private static final List<String> EXCLUDE_SOURCES = List.of("CR", "BILIBILI"); // 排除的源
+    private static final Map<String, Integer> SOURCE_WEIGHT_MAP = Map.of("BAHA", 0, "WEB", 1, "B-GLOBAL", 2); // 源优先级权重，越小越高
     private static final long DEFAULT_VALID_SECONDS = 432000; // 5 天
 
     private static final String SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH = HOME_DIR + File.separator + "sonarr-id-alias-title-cached.json";
@@ -102,6 +103,9 @@ public class RawParserServiceImpl implements IRawParserService {
                 }
             }
 
+            // 根据源优先级，排除掉不需要的源
+            items = this.filterItemsBySourcePriority(items);
+
             String xml = rssConvertor.combine(items, null);
             String signature = Md5Util.md5(xml);
 
@@ -112,6 +116,50 @@ public class RawParserServiceImpl implements IRawParserService {
                 }
             }
         }
+    }
+
+    /**
+     * 根据源优先级，排除掉不需要的源
+     *
+     * @param items 待过滤的剧集条目
+     * @return 过滤后的剧集条目
+     */
+    private List<Item> filterItemsBySourcePriority(List<Item> items) {
+        List<Item> filteredItems = new ArrayList<>();
+
+        Map<String, List<Item>> groupedItems = items.stream()
+                .collect(Collectors.groupingBy(item -> item.seriesId() + item.season() + item.episode()));
+
+        List<String> sources = SOURCE_WEIGHT_MAP.keySet().stream().toList();
+        for (Map.Entry<String, List<Item>> entry : groupedItems.entrySet()) {
+            List<Item> seriesItems = entry.getValue();
+
+            // 按源优先级过滤
+            Optional<Item> highestPriorityItem = seriesItems.stream()
+                    .filter(item -> Objects.nonNull(item.source()))
+                    .min(Comparator.comparingInt(item -> {
+                        Optional<String> optionalSource = sources.stream()
+                                .filter(s -> item.source().toUpperCase().contains(s)).findAny();
+                        if (optionalSource.isPresent()) {
+                            return SOURCE_WEIGHT_MAP.get(optionalSource.get());
+                        } else {
+                            // 如果源不在优先级中，返回最大值，表示最低优先级
+                            return Integer.MAX_VALUE;
+                        }
+                    }));
+
+            if (highestPriorityItem.isPresent()) {
+                filteredItems.add(highestPriorityItem.get());
+            } else {
+                // 来到这里，说明来源为空，选择第一个发布时间最晚的
+                seriesItems.stream()
+                        .filter(item -> Objects.isNull(item.source()))
+                        .max(Comparator.comparing(Item::pubDate))
+                        .ifPresent(filteredItems::add);
+            }
+        }
+
+        return filteredItems;
     }
 
     private Optional<Item> getItem(RawParser.Episode episode, Series series, SyndEntry entry) {
@@ -249,7 +297,7 @@ public class RawParserServiceImpl implements IRawParserService {
         String url = GetTorrentLinkUtil.formatLink(mappingUrl, first.getUrl(), title, episodeStr, seasonNum, series.id());
 
         Enclosure enclosure = new Enclosure(url, first.getLength(), first.getType());
-        return new Item(title, link, pubDate, guid, enclosure);
+        return new Item(title, link, pubDate, guid, enclosure, series.id(), seasonNum, Integer.parseInt(episodeStr), episode.source());
     }
 
     /**
