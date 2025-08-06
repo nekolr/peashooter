@@ -281,6 +281,7 @@ public class RawParserServiceImpl implements IRawParserService {
                     // 计算相对集数
                     int relativeEpisode = episodeNum - preEpisodeNumbers;
                     episodeStr = String.valueOf(relativeEpisode);
+                    log.info("计算相对集数: {}, 原集数: {}, 计算后集数: {}", series.title(), episodeNum, relativeEpisode);
                 }
             }
         }
