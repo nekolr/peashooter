@@ -172,13 +172,16 @@ public class GroupServiceImpl implements IGroupService {
             entryList.addAll(FeedUtils.getEntries(feed));
         }
 
-        // 先将分组转换的结果去重
-        entryList = this.distinct(entryList);
+        // 先将分组转换的结果，按照发布时间去重，保留最新发布的
+        entryList = this.distinctByPubDate(entryList);
 
         // 加上自动转换分组
         String autoRss = rssLoader.loadFromFile(getAutomatedGroupRssFilepath());
         SyndFeed autoFeed = FeedUtils.getFeed(autoRss);
         entryList.addAll(FeedUtils.getEntries(autoFeed));
+
+        // 再将所有的条目去重，保留靠前的，也就是分组转换到的结果优先
+        entryList = this.distinctByOrderAsc(entryList);
 
         SyndFeed syndFeed = FeedUtils.createFeed();
         FeedUtils.setFeedType(syndFeed, RSS_2_0);
@@ -189,7 +192,7 @@ public class GroupServiceImpl implements IGroupService {
         return FeedUtils.writeString(syndFeed);
     }
 
-    private List<SyndEntry> distinct(List<SyndEntry> entryList) {
+    private List<SyndEntry> distinctByPubDate(List<SyndEntry> entryList) {
         Map<String, SyndEntry> dictionary = new LinkedHashMap<>();
         for (SyndEntry entry : entryList) {
             String key = FeedUtils.getUri(entry);
@@ -200,6 +203,17 @@ public class GroupServiceImpl implements IGroupService {
                 if (oldEntry.getPublishedDate().before(entry.getPublishedDate())) {
                     dictionary.put(key, entry);
                 }
+            }
+        }
+        return new ArrayList<>(dictionary.values());
+    }
+
+    private List<SyndEntry> distinctByOrderAsc(List<SyndEntry> entryList) {
+        Map<String, SyndEntry> dictionary = new LinkedHashMap<>();
+        for (SyndEntry entry : entryList) {
+            String key = FeedUtils.getUri(entry);
+            if (!dictionary.containsKey(key)) {
+                dictionary.put(key, entry);
             }
         }
         return new ArrayList<>(dictionary.values());
