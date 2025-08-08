@@ -10,9 +10,9 @@ spring:
     time-zone: GMT+8
   jpa:
     open-in-view: true
+    show-sql: false
     hibernate:
       ddl-auto: update
-      show-sql: true
   datasource:
     url: jdbc:h2:file:${user.dir}/peashooter/db;FILE_LOCK=FS
     username: sa
