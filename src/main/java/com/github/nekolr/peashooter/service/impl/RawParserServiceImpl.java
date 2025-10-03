@@ -196,7 +196,12 @@ public class RawParserServiceImpl implements IRawParserService {
             if (Files.exists(Path.of(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH))) {
                 String json = FileUtil.readString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
                 cached = JSON.parseObject(json, SonarrIdAliasTitleCached.class);
-                cached.titles.forEach(title -> sonarrIdTitleMap.put(title.sonarrId(), title.titles));
+                if (cached.titles.size() >= monitoredSeries.size()) {
+                    cached.titles.forEach(title -> sonarrIdTitleMap.put(title.sonarrId(), title.titles));
+                } else {
+                    // 说明有新增的剧集
+                    cached = null;
+                }
             } else {
                 cached = null;
             }
