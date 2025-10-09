@@ -27,7 +27,7 @@ public class ResolvePubDateUtil {
      * 根据链接解析发布时间
      */
     public Date resolvePubDate(SyndEntry entry, String link) {
-        if (MI_KAN_URL.contains(link)) {
+        if (link.contains(MI_KAN_URL)) {
             return resolverMap.get(PubDateType.MI_KAN.getType()).resolver(entry);
         } else {
             return resolverMap.get(PubDateType.DEFAULT.getType()).resolver(entry);
