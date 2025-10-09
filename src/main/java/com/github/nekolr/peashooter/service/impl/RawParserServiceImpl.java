@@ -190,42 +190,73 @@ public class RawParserServiceImpl implements IRawParserService {
         return Optional.empty();
     }
 
+    private Optional<SonarrIdAliasTitle> getSonarrIdAliasTitle(Series series) {
+        FindById.TvResult tvResult = null;
+        if (Objects.nonNull(series.imdbId())) {
+            tvResult = theMovieDbApi.findByImdbId(series.imdbId());
+        } else if (Objects.nonNull(series.tvdbId())) {
+            tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
+        }
+
+        if (Objects.nonNull(tvResult)) {
+            List<FindAliasTitle.Title> titleList = theMovieDbApi.findAliasTitles(tvResult.id());
+            if (!titleList.isEmpty()) {
+                return Optional.of(new SonarrIdAliasTitle(series.id(), titleList));
+            }
+        }
+
+        return Optional.of(new SonarrIdAliasTitle(series.id(), Collections.emptyList()));
+    }
+
     private void cachedSonarrIdTitleMap(List<Series> monitoredSeries) {
         try {
-            SonarrIdAliasTitleCached cached;
+            SonarrIdAliasTitleCached cached = null;
+            List<SonarrIdAliasTitle> titles = new ArrayList<>();
             if (Files.exists(Path.of(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH))) {
                 String json = FileUtil.readString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
                 cached = JSON.parseObject(json, SonarrIdAliasTitleCached.class);
-                if (cached.titles.size() >= monitoredSeries.size()) {
-                    cached.titles.forEach(title -> sonarrIdTitleMap.put(title.sonarrId(), title.titles));
-                } else {
-                    // 说明有新增的剧集
-                    cached = null;
-                }
-            } else {
-                cached = null;
-            }
-            // 缓存文件不存在或者缓存已过期
-            if (Objects.isNull(cached) || cached.timestamp.plusSeconds(DEFAULT_VALID_SECONDS).isBefore(Instant.now())) {
-                List<SonarrIdAliasTitle> titles = new ArrayList<>();
-                for (Series series : monitoredSeries) {
-                    FindById.TvResult tvResult = null;
-                    if (Objects.nonNull(series.imdbId())) {
-                        tvResult = theMovieDbApi.findByImdbId(series.imdbId());
-                    } else if (Objects.nonNull(series.tvdbId())) {
-                        tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
-                    }
 
-                    if (Objects.nonNull(tvResult)) {
-                        List<FindAliasTitle.Title> titleList = theMovieDbApi.findAliasTitles(tvResult.id());
-                        if (!titleList.isEmpty()) {
+                Map<String, List<FindAliasTitle.Title>> cachedMap = cached.titles().stream()
+                        .filter(t -> Objects.nonNull(t.titles))
+                        .collect(Collectors.toMap(SonarrIdAliasTitle::sonarrId, SonarrIdAliasTitle::titles));
+
+                // 是否需要更新缓存文件
+                boolean needWrite = false;
+
+                for (Series series : monitoredSeries) {
+                    boolean exists = cachedMap.containsKey(series.id());
+                    if (exists) {
+                        sonarrIdTitleMap.put(series.id(), cachedMap.get(series.id()));
+                        titles.add(new SonarrIdAliasTitle(series.id(), cachedMap.get(series.id())));
+                    } else {
+                        Optional<SonarrIdAliasTitle> sonarrIdAliasTitle = this.getSonarrIdAliasTitle(series);
+                        if (sonarrIdAliasTitle.isPresent()) {
+                            List<FindAliasTitle.Title> titleList = sonarrIdAliasTitle.get().titles();
                             sonarrIdTitleMap.put(series.id(), titleList);
                             titles.add(new SonarrIdAliasTitle(series.id(), titleList));
-                            continue;
                         }
+                        needWrite = true;
                     }
-                    sonarrIdTitleMap.put(series.id(), Collections.emptyList());
-                    titles.add(new SonarrIdAliasTitle(series.id(), Collections.emptyList()));
+                }
+
+                if (needWrite) {
+                    SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(titles, cached.timestamp);
+                    FileUtil.writeString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH, JSON.toJSONString(newCached));
+                }
+            }
+
+            // 缓存文件不存在或者缓存已过期
+            if (Objects.isNull(cached) || cached.timestamp.plusSeconds(DEFAULT_VALID_SECONDS).isBefore(Instant.now())) {
+                for (Series series : monitoredSeries) {
+                    Optional<SonarrIdAliasTitle> sonarrIdAliasTitle = this.getSonarrIdAliasTitle(series);
+                    if (sonarrIdAliasTitle.isPresent()) {
+                        List<FindAliasTitle.Title> titleList = sonarrIdAliasTitle.get().titles();
+                        sonarrIdTitleMap.put(series.id(), titleList);
+                        titles.add(sonarrIdAliasTitle.get());
+                    } else {
+                        sonarrIdTitleMap.put(series.id(), Collections.emptyList());
+                        titles.add(new SonarrIdAliasTitle(series.id(), Collections.emptyList()));
+                    }
                 }
                 SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(titles, Instant.now());
                 FileUtil.writeString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH, JSON.toJSONString(newCached));
@@ -275,7 +306,7 @@ public class RawParserServiceImpl implements IRawParserService {
         if (seasonNum > 1) {
             Series seriesDetail = sonarrV3Api.getSeries(series.id());
             if (!CollectionUtils.isEmpty(seriesDetail.seasons())) {
-                Integer preEpisodeNumbers = seriesDetail.seasons().stream()
+                int preEpisodeNumbers = seriesDetail.seasons().stream()
                         // 去掉特典
                         .filter(season -> !season.seasonNumber().equals(0))
                         .sorted(Comparator.comparing(Series.Season::seasonNumber))
