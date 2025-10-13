@@ -208,7 +208,7 @@ public class RawParserServiceImpl implements IRawParserService {
         return Optional.of(new SonarrIdAliasTitle(series.id(), Collections.emptyList()));
     }
 
-    private void cachedSonarrIdTitleMap(List<Series> monitoredSeries) {
+    private synchronized void cachedSonarrIdTitleMap(List<Series> monitoredSeries) {
         try {
             SonarrIdAliasTitleCached cached = null;
             List<SonarrIdAliasTitle> titles = new ArrayList<>();
@@ -218,7 +218,7 @@ public class RawParserServiceImpl implements IRawParserService {
 
                 Map<String, List<FindAliasTitle.Title>> cachedMap = cached.titles().stream()
                         .filter(t -> Objects.nonNull(t.titles))
-                        .collect(Collectors.toMap(SonarrIdAliasTitle::sonarrId, SonarrIdAliasTitle::titles));
+                        .collect(Collectors.toMap(SonarrIdAliasTitle::sonarrId, SonarrIdAliasTitle::titles, (v1, v2) -> v1));
 
                 // 是否需要更新缓存文件
                 boolean needWrite = false;
