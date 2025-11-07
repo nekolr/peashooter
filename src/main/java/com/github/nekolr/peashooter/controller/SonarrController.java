@@ -35,7 +35,7 @@ public class SonarrController {
     }
 
     @PostMapping("setupAllGroupIndexer")
-    public JsonBean<Void> setupAllGroupIndexer() {
+    public JsonBean<Boolean> setupAllGroupIndexer() {
         return JsonBean.ok(sonarrService.setupAllGroupIndexer());
     }
 }

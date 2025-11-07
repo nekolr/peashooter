@@ -12,6 +12,7 @@ import com.github.nekolr.peashooter.service.ISeriesNameService;
 import com.github.nekolr.peashooter.service.ISonarrService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -26,6 +27,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "series")
 public class SonarrServiceImpl implements ISonarrService {
 
     private final Map<String, SeriesNameDto> sonarrSeries = new ConcurrentHashMap<>();
@@ -36,6 +38,7 @@ public class SonarrServiceImpl implements ISonarrService {
     private final ISeriesNameService seriesNameService;
 
     @Override
+    @Cacheable(key = "'all'")
     public List<SeriesNameDto> getSeriesNameList() {
         List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
@@ -50,6 +53,7 @@ public class SonarrServiceImpl implements ISonarrService {
     }
 
     @Override
+    @Caching(evict = {@CacheEvict(key = "'all'", beforeInvocation = true)}, cacheable = {@Cacheable(key = "'all'")})
     public List<SeriesNameDto> refreshSeriesName() {
         log.info("开始刷新 sonarr 的剧集中文信息");
         List<Series> seriesList = sonarrV3Api.getSeriesList();
@@ -91,6 +95,7 @@ public class SonarrServiceImpl implements ISonarrService {
     }
 
     @Override
+    @CacheEvict(key = "'all'", beforeInvocation = true)
     public void syncSeriesLatest() {
         final long REFRESH_COUNT = 100;
         log.info("重新同步 sonarr 最近 {} 部剧集的中文信息", REFRESH_COUNT);

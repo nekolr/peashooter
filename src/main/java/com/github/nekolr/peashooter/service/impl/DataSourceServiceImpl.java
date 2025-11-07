@@ -18,6 +18,10 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.*;
 
 @Slf4j
 @Service
+@CacheConfig(cacheNames = "dataSource")
 @RequiredArgsConstructor
 public class DataSourceServiceImpl implements IDataSourceService {
 
@@ -43,12 +48,14 @@ public class DataSourceServiceImpl implements IDataSourceService {
     private final DataSourceRepository dataSourceRepository;
 
     @Override
+    @Cacheable(key = "'all'")
     public List<DataSource> findAll() {
         return dataSourceRepository.findAll();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     public void removeById(Long id) {
         dataSourceRepository.deleteById(id);
         boolean success = jobManager.removeJob(String.valueOf(id));
@@ -58,12 +65,14 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
+    @Cacheable(key = "#p0")
     public DataSource getById(Long id) {
         return dataSourceRepository.findById(id).orElse(null);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(key = "'all'")
     public DataSource save(DataSource dataSource) {
         dataSource = dataSourceRepository.save(dataSource);
         if (Objects.nonNull(dataSource.getId())) {
@@ -87,6 +96,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     public boolean refreshRss(Long id) {
         boolean refreshed = false;
         DataSource dataSource = this.getById(id);

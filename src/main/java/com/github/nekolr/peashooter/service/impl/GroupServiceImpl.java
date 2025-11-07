@@ -21,6 +21,10 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
@@ -37,6 +41,7 @@ import static com.github.nekolr.peashooter.constant.Peashooter.RSS_DESCRIPTION;
 
 @Slf4j
 @Service
+@CacheConfig(cacheNames = "group")
 @RequiredArgsConstructor
 public class GroupServiceImpl implements IGroupService {
 
@@ -49,12 +54,14 @@ public class GroupServiceImpl implements IGroupService {
     private final IGroupDataSourceService gdService;
 
     @Override
+    @Cacheable(key = "'all'")
     public List<Group> findAll() {
         return groupRepository.findAll();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     public void removeById(Long id) {
         groupRepository.deleteById(id);
         List<GroupDataSource> groupDataSources = gdService.getByGroupId(id);
@@ -62,6 +69,7 @@ public class GroupServiceImpl implements IGroupService {
     }
 
     @Override
+    @Cacheable(key = "#p0")
     public Group getById(Long id) {
         Group group = groupRepository.findById(id).orElse(null);
         if (Objects.isNull(group)) {
@@ -76,6 +84,7 @@ public class GroupServiceImpl implements IGroupService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0.id", condition = "#p0.id != null")})
     public Group save(Group group) {
         group.setUpdateTime(new Date());
         return groupRepository.save(group);
@@ -93,13 +102,14 @@ public class GroupServiceImpl implements IGroupService {
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         Page<Group> page = groupRepository.findAll(Example.of(group, matcher), pageable);
         List<Group> list = page.getContent();
-        list.stream().forEach(e -> e.setRssLink(getGroupRssFileUrl(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
+        list.forEach(e -> e.setRssLink(getGroupRssFileUrl(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
 
         return page;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0.id", condition = "#p0.id != null")})
     public void saveGroup(SaveGroup saveGroup) {
         Group group = groupMapper.toDomain(saveGroup);
 
