@@ -10,7 +10,7 @@ RUN apt-get update \
 RUN mvn clean package
 
 
-FROM openjdk:21-slim
+FROM eclipse-temurin:21
 
 ENV PEASHOOTER_USERNAME=admin \
     PEASHOOTER_PASSWORD=admin \
