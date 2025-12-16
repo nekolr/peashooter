@@ -114,7 +114,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     throw new RuntimeException(e);
                 }
             });
-
+            return;
         }
 
         String jwt = this.resolveToken(request);
