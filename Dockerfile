@@ -1,16 +1,16 @@
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM maven:3.9.11-eclipse-temurin-25 AS build
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 COPY . .
 RUN apt-get update \
     && apt install curl -y  \
-    && curl -sL https://deb.nodesource.com/setup_20.x | bash -  \
+    && curl -sL https://deb.nodesource.com/setup_22.x | bash -  \
     && apt-get install nodejs -y
 RUN mvn clean package
 
 
-FROM eclipse-temurin:21
+FROM eclipse-temurin:25
 
 ENV PEASHOOTER_USERNAME=admin \
     PEASHOOTER_PASSWORD=admin \

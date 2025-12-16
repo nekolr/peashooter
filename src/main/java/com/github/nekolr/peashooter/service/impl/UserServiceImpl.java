@@ -4,11 +4,10 @@ import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
 import com.github.nekolr.peashooter.controller.response.auth.LoginUserVo;
 import com.github.nekolr.peashooter.controller.response.auth.UserInfo;
+import com.github.nekolr.peashooter.security.ContextHolder;
 import com.github.nekolr.peashooter.security.TokenProvider;
 import com.github.nekolr.peashooter.service.IUserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -19,6 +18,7 @@ public class UserServiceImpl implements IUserService {
 
     private final UserSettings userSettings;
     private final TokenProvider tokenProvider;
+    private final ContextHolder contextHolder;
 
     @Override
     public LoginUser findByUsername(String username) {
@@ -40,9 +40,10 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserInfo userinfo() {
-        SecurityContext context = SecurityContextHolder.getContextHolderStrategy().getContext();
-        LoginUser loginUser = (LoginUser) context.getAuthentication().getPrincipal();
-        String username = loginUser.getUsername();
+        String username = contextHolder.getCurrUsername();
+        if (Objects.isNull(username)) {
+            throw new RuntimeException("用户未登录");
+        }
         return new UserInfo(username);
     }
 }
