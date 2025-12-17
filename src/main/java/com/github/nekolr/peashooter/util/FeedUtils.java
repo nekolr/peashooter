@@ -19,15 +19,12 @@ public class FeedUtils {
         Document document;
         SyndFeed feed = null;
         SAXBuilder saxBuilder = new SAXBuilder();
-        StringReader reader = new StringReader(xml);
-        SyndFeedInput feedInput = new SyndFeedInput();
-        try {
+        try (StringReader reader = new StringReader(xml)) {
+            SyndFeedInput feedInput = new SyndFeedInput();
             document = saxBuilder.build(reader);
             feed = feedInput.build(document);
         } catch (Exception e) {
             throw new RuntimeException("解析 feed 失败", e);
-        } finally {
-            reader.close();
         }
         return feed;
     }
@@ -256,11 +253,10 @@ public class FeedUtils {
         return new SyndFeedImpl();
     }
 
-    public static SyndFeed setFeedType(SyndFeed feed, String type) {
+    public static void setFeedType(SyndFeed feed, String type) {
         if (Objects.nonNull(feed)) {
             feed.setFeedType(type);
         }
-        return null;
     }
 
     public static SyndEntry createEntry() {
@@ -302,9 +298,7 @@ public class FeedUtils {
         try {
             new SyndFeedOutput().output(syndFeed, writer, false);
             return writer.toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (FeedException e) {
+        } catch (IOException | FeedException e) {
             throw new RuntimeException(e);
         }
     }

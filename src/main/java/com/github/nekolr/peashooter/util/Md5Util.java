@@ -30,9 +30,7 @@ public class Md5Util {
             md = MessageDigest.getInstance(MD5);
             md.update(bytes);
             dest = new String(encode(md.digest()));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
         return dest;

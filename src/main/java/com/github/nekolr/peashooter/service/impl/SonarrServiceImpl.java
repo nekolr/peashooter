@@ -55,10 +55,8 @@ public class SonarrServiceImpl implements ISonarrService {
     @Override
     @Caching(evict = {@CacheEvict(key = "'all'", beforeInvocation = true)}, cacheable = {@Cacheable(key = "'all'")})
     public List<SeriesNameDto> refreshSeriesName() {
-        log.info("开始刷新 sonarr 的剧集中文信息");
         List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
-            log.info("没有获取到 sonarr 的剧集信息");
             return Collections.emptyList();
         } else {
             Stream<SeriesNameDto> stream = seriesList.stream().map(series -> {
@@ -67,20 +65,19 @@ public class SonarrServiceImpl implements ISonarrService {
                     log.info("原始剧集信息：{}", series);
                     SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
                     if (Objects.isNull(seriesName)) {
-                        FindById.TvResult tvResult = this.findTvById(series);
-                        if (Objects.nonNull(tvResult)) {
-                            log.info("获取到对应的中文剧集信息：{}", tvResult);
+                        Optional<FindById.TvResult> tvResultOp = this.findTvById(series);
+                        if (tvResultOp.isPresent()) {
+                            log.info("获取到对应的中文剧集信息：{}", tvResultOp.get());
                             sonarrSeries.computeIfAbsent(seriesId, k -> {
-                                SeriesNameDto seriesNameDto = new SeriesNameDto(seriesId, tvResult.name(), series.title());
-                                seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResult.name()));
+                                SeriesNameDto seriesNameDto = new SeriesNameDto(seriesId, tvResultOp.get().name(), series.title());
+                                seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResultOp.get().name()));
                                 return seriesNameDto;
                             });
                         } else {
-                            log.warn("没有获取到剧集 {} 对应的中文信息", series.title());
+                            log.info("没有获取到剧集 {} 对应的中文信息", series.title());
                             sonarrSeries.putIfAbsent(seriesId, new SeriesNameDto(seriesId, series.title(), series.title()));
                         }
                     } else {
-                        log.info("加载本地剧集信息：{}", seriesName);
                         SeriesNameDto dto = new SeriesNameDto(seriesId, seriesName.getTitleZhCN(), seriesName.getTitleEn());
                         sonarrSeries.put(seriesId, dto);
                     }
@@ -88,9 +85,7 @@ public class SonarrServiceImpl implements ISonarrService {
                 return sonarrSeries.get(seriesId);
             }).sorted(Comparator.comparing(SeriesNameDto::seriesId, Comparator.comparing(Long::valueOf)).reversed());
 
-            List<SeriesNameDto> result = stream.collect(Collectors.toList());
-            log.info("剧集信息刷新完毕");
-            return result;
+            return stream.collect(Collectors.toList());
         }
     }
 
@@ -98,44 +93,38 @@ public class SonarrServiceImpl implements ISonarrService {
     @CacheEvict(key = "'all'", beforeInvocation = true)
     public void syncSeriesLatest() {
         final long REFRESH_COUNT = 100;
-        log.info("重新同步 sonarr 最近 {} 部剧集的中文信息", REFRESH_COUNT);
         List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
-            log.info("没有获取到 sonarr 的剧集信息");
-        } else {
-            Comparator<Series> comparator = Comparator.comparing(Series::id,
-                    Comparator.comparing(Long::valueOf)).reversed();
-            seriesList.stream().sorted(comparator).limit(REFRESH_COUNT).forEach(series -> {
-                String seriesId = series.id();
-                log.info("原始剧集信息：{}", series);
-                FindById.TvResult tvResult = this.findTvById(series);
-                if (Objects.nonNull(tvResult)) {
-                    log.info("获取到对应的中文剧集信息：{}", tvResult);
-                    if (StringUtils.hasText(tvResult.name())) {
-                        sonarrSeries.put(seriesId, new SeriesNameDto(seriesId, tvResult.name(), series.title()));
-                        SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
-                        if (Objects.nonNull(seriesName)) {
-                            if (!tvResult.name().equals(seriesName.getTitleZhCN())) {
-                                seriesName.setTitleZhCN(tvResult.name());
-                                seriesNameService.saveSeriesName(seriesName);
-                            }
-                        } else {
-                            seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResult.name()));
-                        }
-                    }
-                }
-            });
-            log.info("剧集信息同步完毕");
+            return;
         }
+
+        Comparator<Series> comparator = Comparator.comparing(Series::id,
+                Comparator.comparing(Long::valueOf)).reversed();
+        seriesList.stream().sorted(comparator).limit(REFRESH_COUNT).forEach(series -> {
+            String seriesId = series.id();
+            Optional<FindById.TvResult> tvResultOp = this.findTvById(series);
+            if (tvResultOp.isPresent() && StringUtils.hasText(tvResultOp.get().name())) {
+                sonarrSeries.put(seriesId, new SeriesNameDto(seriesId, tvResultOp.get().name(), series.title()));
+                SeriesName seriesName = seriesNameService.findByTitleEn(series.title());
+                if (Objects.nonNull(seriesName)) {
+                    if (!tvResultOp.get().name().equals(seriesName.getTitleZhCN())) {
+                        seriesName.setTitleZhCN(tvResultOp.get().name());
+                        seriesNameService.saveSeriesName(seriesName);
+                    }
+                } else {
+                    seriesNameService.saveSeriesName(new SeriesName(series.title(), tvResultOp.get().name()));
+                }
+            }
+        });
     }
 
-    private FindById.TvResult findTvById(Series series) {
+    private Optional<FindById.TvResult> findTvById(Series series) {
         if (Objects.nonNull(series.imdbId())) {
             return theMovieDbApi.findByImdbId(series.imdbId());
         } else if (Objects.nonNull(series.tvdbId())) {
             return theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override

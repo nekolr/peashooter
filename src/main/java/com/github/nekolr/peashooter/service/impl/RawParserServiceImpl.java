@@ -19,7 +19,6 @@ import com.github.nekolr.peashooter.util.*;
 import com.rometools.rome.feed.synd.SyndEnclosure;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
-import jodd.io.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,8 +26,10 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -191,15 +192,15 @@ public class RawParserServiceImpl implements IRawParserService {
     }
 
     private Optional<SonarrIdAliasTitle> getSonarrIdAliasTitle(Series series) {
-        FindById.TvResult tvResult = null;
+        Optional<FindById.TvResult> tvResultOp = Optional.empty();
         if (Objects.nonNull(series.imdbId())) {
-            tvResult = theMovieDbApi.findByImdbId(series.imdbId());
+            tvResultOp = theMovieDbApi.findByImdbId(series.imdbId());
         } else if (Objects.nonNull(series.tvdbId())) {
-            tvResult = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
+            tvResultOp = theMovieDbApi.findByTvdbId(String.valueOf(series.tvdbId()));
         }
 
-        if (Objects.nonNull(tvResult)) {
-            List<FindAliasTitle.Title> titleList = theMovieDbApi.findAliasTitles(tvResult.id());
+        if (tvResultOp.isPresent()) {
+            List<FindAliasTitle.Title> titleList = theMovieDbApi.findAliasTitles(tvResultOp.get().id());
             if (!titleList.isEmpty()) {
                 return Optional.of(new SonarrIdAliasTitle(series.id(), titleList));
             }
@@ -212,8 +213,10 @@ public class RawParserServiceImpl implements IRawParserService {
         try {
             SonarrIdAliasTitleCached cached = null;
             List<SonarrIdAliasTitle> titles = new ArrayList<>();
-            if (Files.exists(Path.of(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH))) {
-                String json = FileUtil.readString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
+            Path cachePath = Paths.get(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
+
+            if (Files.exists(cachePath)) {
+                String json = Files.readString(cachePath, StandardCharsets.UTF_8);
                 cached = JSON.parseObject(json, SonarrIdAliasTitleCached.class);
 
                 Map<String, List<FindAliasTitle.Title>> cachedMap = cached.titles().stream()
@@ -241,8 +244,9 @@ public class RawParserServiceImpl implements IRawParserService {
 
                 if (needWrite) {
                     SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(titles, cached.timestamp);
-                    FileUtil.writeString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH, JSON.toJSONString(newCached));
+                    this.writeCacheFile(newCached);
                 }
+
             }
 
             // 缓存文件不存在或者缓存已过期
@@ -259,10 +263,25 @@ public class RawParserServiceImpl implements IRawParserService {
                     }
                 }
                 SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(titles, Instant.now());
-                FileUtil.writeString(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH, JSON.toJSONString(newCached));
+                this.writeCacheFile(newCached);
             }
         } catch (IOException e) {
             log.error("读取 Sonarr ID 和别名标题缓存文件失败", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void writeCacheFile(SonarrIdAliasTitleCached cached) {
+        try {
+            String json = JSON.toJSONString(cached);
+            Path cachePath = Paths.get(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
+            // 确保父目录存在
+            if (cachePath.getParent() != null) {
+                Files.createDirectories(cachePath.getParent());
+            }
+            Files.writeString(cachePath, json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("写入缓存文件失败", e);
             throw new RuntimeException(e);
         }
     }

@@ -20,7 +20,7 @@ public class RenameTorrentJobInitializer implements InitializingBean {
 
     private final ISettingsService settingsService;
     private final RenameTorrentJobManager jobManager;
-    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     @Override
     public void afterPropertiesSet() {

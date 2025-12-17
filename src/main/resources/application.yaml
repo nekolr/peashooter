@@ -18,8 +18,12 @@ spring:
     username: sa
     password: sa
   cache:
+    type: caffeine
     caffeine:
       spec: initialCapacity=50,maximumSize=300,expireAfterWrite=3h,expireAfterAccess=3h
+  threads:
+    virtual:
+      enabled: true
 
 logging:
   file:

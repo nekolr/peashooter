@@ -1,6 +1,6 @@
 package com.github.nekolr.peashooter.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
@@ -40,7 +40,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
     private final ContextHolder contextHolder;
     private final SettingsManager settingsManager;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
@@ -150,7 +149,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private void sendUnauthorizedResponse(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(JsonBean.fail("unauthorized")));
+        response.getWriter().write(JSON.toJSONString(JsonBean.fail("unauthorized")));
     }
 
     private String resolveToken(HttpServletRequest request) {

@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.4</version>
+        <version>4.0.0</version>
     </parent>
 
     <properties>
@@ -22,8 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <rome.version>2.1.0</rome.version>
         <jjwt.version>0.13.0</jjwt.version>
-        <fastjson.version>2.0.56</fastjson.version>
-        <jodd-http.version>6.3.0</jodd-http.version>
+        <fastjson.version>2.0.60</fastjson.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <fuzzywuzzy.version>1.4.0</fuzzywuzzy.version>
     </properties>
@@ -78,15 +77,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-quartz</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jodd</groupId>
-            <artifactId>jodd-http</artifactId>
-            <version>${jodd-http.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
@@ -155,7 +145,6 @@
                     <source>${java.version}</source>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <skip>true</skip>
-                    <!-- JDK 9+ required this -->
                     <annotationProcessorPaths>
                         <!-- attention to the order: lombok first -->
                         <path>
@@ -175,6 +164,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <mainClass>com.github.nekolr.peashooter.PeashooterApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -238,7 +228,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <id>add-resource</id>

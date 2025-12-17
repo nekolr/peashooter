@@ -8,7 +8,7 @@ public enum PubDateType {
     DEFAULT("default"),
     MI_KAN("mi-kan");
 
-    private String type;
+    private final String type;
 
     PubDateType(String type) {
         this.type = type;

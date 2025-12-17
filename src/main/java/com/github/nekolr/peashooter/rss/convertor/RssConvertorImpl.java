@@ -54,7 +54,7 @@ public class RssConvertorImpl implements RssConvertor {
             enclosure.setUrl(item.enclosure().url());
             enclosure.setType(item.enclosure().type());
             enclosure.setLength(item.enclosure().length());
-            FeedUtils.setEnclosures(entry, Arrays.asList(enclosure));
+            FeedUtils.setEnclosures(entry, List.of(enclosure));
 
             entries.add(entry);
         }

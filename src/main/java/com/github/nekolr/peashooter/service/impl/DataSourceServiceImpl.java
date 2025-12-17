@@ -31,7 +31,6 @@ import java.text.Format;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.*;
@@ -99,14 +98,14 @@ public class DataSourceServiceImpl implements IDataSourceService {
     @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     public boolean refreshRss(Long id) {
         boolean refreshed = false;
-        DataSource dataSource = this.getById(id);
+        DataSource dataSource = dataSourceRepository.findById(id).orElse(null);
         if (Objects.nonNull(dataSource)) {
             String xml = rssLoader.load(dataSource.getSourceUrl(), dataSource.getUseProxy());
             if (Objects.nonNull(xml)) {
                 String sign = Md5Util.md5(xml);
                 if (!Objects.equals(sign, dataSource.getSignature())) {
                     dataSource.setSignature(sign);
-                    this.save(dataSource);
+                    this.dataSourceRepository.save(dataSource);
                     rssWriter.write(xml, getDatasourceRssFilepath(id));
                     refreshed = true;
                 }
@@ -117,7 +116,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
 
     @Override
     public List<ItemTitle> getItemTitleList(Long id, String title) {
-        DataSource dataSource = this.getById(id);
+        DataSource dataSource = dataSourceRepository.findById(id).orElse(null);
         if (Objects.isNull(dataSource)) {
             return Collections.emptyList();
         } else {
@@ -145,7 +144,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
         if (Objects.nonNull(cmd.dataSourceIds()) && cmd.dataSourceIds().length > 0) {
             Stream<ItemTitle> stream = Arrays.stream(cmd.dataSourceIds())
                     .flatMap(id -> this.getItemTitleList(Long.valueOf(id), null).stream());
-            itemTitles = stream.collect(Collectors.toList());
+            itemTitles = stream.toList();
         }
         int count = 0;
         Matcher matcher = cmd.matcher();

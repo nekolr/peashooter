@@ -4,14 +4,18 @@ import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.config.Settings;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.util.RandomUtil;
-import jodd.io.FileUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.*;
 
@@ -27,28 +31,36 @@ public class SettingsInitializer implements InitializingBean {
     }
 
     private void initRssDir() throws IOException {
-        if (!FileUtil.isExistingFolder(new File(ORIGINAL_RSS_FILE_DIR))) {
-            FileUtil.mkdir(ORIGINAL_RSS_FILE_DIR);
-        }
-        if (!FileUtil.isExistingFolder(new File(CONVERTED_RSS_FILE_DIR))) {
-            FileUtil.mkdir(CONVERTED_RSS_FILE_DIR);
-        }
+        createDirIfNotExists(ORIGINAL_RSS_FILE_DIR);
+        createDirIfNotExists(CONVERTED_RSS_FILE_DIR);
     }
 
     private void initSettings() throws Exception {
-
-        if (!FileUtil.isExistingFolder(new File(SETTINGS_DIR))) {
-            FileUtil.mkdir(SETTINGS_DIR);
-        }
+        createDirIfNotExists(SETTINGS_DIR);
 
         final String filePath = SETTINGS_DIR + SETTINGS_FILE_NAME;
-        if (!FileUtil.isExistingFile(new File(filePath))) {
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(SETTINGS_FILE_NAME);
-            Settings settings = JSON.parseObject(inputStream, Settings.class);
-            settings.getBasic().setApiKey(RandomUtil.generate(32));
-            settingsManager.update(settings);
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            // 从 classpath 读取默认配置
+            ClassPathResource resource = new ClassPathResource(SETTINGS_FILE_NAME);
+            try (InputStream inputStream = resource.getInputStream()) {
+                Settings settings = JSON.parseObject(inputStream, Settings.class);
+                settings.getBasic().setApiKey(RandomUtil.generate(32));
+                settingsManager.update(settings);
+            }
         } else {
-            settingsManager.update(JSON.parseObject(FileUtil.readString(filePath), Settings.class));
+            // 从文件读取现有配置
+            String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            Settings settings = JSON.parseObject(content, Settings.class);
+            settingsManager.update(settings);
+        }
+    }
+
+    private void createDirIfNotExists(String dirPath) throws IOException {
+        Path path = Paths.get(dirPath);
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
         }
     }
 }

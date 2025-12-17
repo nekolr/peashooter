@@ -8,16 +8,15 @@ import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
 import com.github.nekolr.peashooter.config.SettingsManager;
-import jodd.http.HttpException;
-import jodd.http.HttpRequest;
-import jodd.http.HttpResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.http.*;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -26,35 +25,43 @@ import java.util.List;
 public class SonarrV3Client implements SonarrV3Api {
 
     private final SettingsManager settingsManager;
+    private final RestClient defaultRestClient;
 
     @Override
     public List<Queue> getQueueList() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
-        HttpRequest request = HttpRequest.get(this.getUrl(GET_QUEUE_LIST_URI));
-        request.header(X_API_KEY_HEADER_NAME, apiKey);
-        request.query("page", 1);
-        request.query("pageSize", 50);
-        request.query("includeSeries", true);
-        request.query("includeEpisode", true);
-        HttpResponse response = request.send();
-        if (response.statusCode() != 200)
-            return null;
-        JSONObject respObj = JSON.parseObject(response.bodyText());
+
+        ResponseEntity<String> response = defaultRestClient.get()
+                .uri(settingsManager.get().getSonarr().getUrl() + GET_QUEUE_LIST_URI)
+                .header(X_API_KEY_HEADER_NAME, apiKey)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            return Collections.emptyList();
+        }
+
+        JSONObject respObj = JSON.parseObject(response.getBody());
         return JSON.parseArray(respObj.getString("records"), Queue.class);
     }
 
     @Override
     public Boolean addRssIndexer(AddRssIndexer indexer) {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
-        HttpRequest request = HttpRequest.post(this.getUrl(ADD_INDEXER_URI));
-        request.header(X_API_KEY_HEADER_NAME, apiKey);
-        request.contentTypeJson();
-        request.body(JSON.toJSONString(indexer));
-        HttpResponse response = request.send();
-        if (response.statusCode() == 201) {
+
+        String requestBody = JSON.toJSONString(indexer);
+        ResponseEntity<String> response = defaultRestClient.post()
+                .uri(settingsManager.get().getSonarr().getUrl() + ADD_INDEXER_URI)
+                .header(X_API_KEY_HEADER_NAME, apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
             return Boolean.TRUE;
         } else {
-            log.info("请求添加 Indexer 失败：{}", response.bodyText());
+            log.info("请求添加 Indexer 失败：{}", response.getBody());
             return Boolean.FALSE;
         }
     }
@@ -62,44 +69,54 @@ public class SonarrV3Client implements SonarrV3Api {
     @Override
     public Status getStatus() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
-        HttpRequest request = HttpRequest.get(this.getUrl(GET_STATUS_URI));
-        request.header(X_API_KEY_HEADER_NAME, apiKey);
-        try {
-            HttpResponse response = request.send();
-            if (response.statusCode() != 200)
-                return null;
-            return JSON.parseObject(response.bodyText(), Status.class);
-        } catch (Exception e) {
-            log.error("get status error: {}", e.getMessage());
+
+        ResponseEntity<String> response = defaultRestClient.get()
+                .uri(settingsManager.get().getSonarr().getUrl() + GET_STATUS_URI)
+                .header(X_API_KEY_HEADER_NAME, apiKey)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
             return null;
         }
+
+        return JSON.parseObject(response.getBody(), Status.class);
     }
 
     @Override
     public List<Series> getSeriesList() {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
-        HttpRequest request = HttpRequest.get(this.getUrl(GET_SERIES_LIST_URI));
-        request.header(X_API_KEY_HEADER_NAME, apiKey);
-        HttpResponse response = request.send();
-        if (response.statusCode() != 200)
+        String url = settingsManager.get().getSonarr().getUrl() + GET_SERIES_LIST_URI;
+
+        ResponseEntity<String> response = defaultRestClient.get()
+                .uri(url)
+                .header(X_API_KEY_HEADER_NAME, apiKey)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
             return null;
-        return JSON.parseArray(response.bodyText(), Series.class);
+        }
+
+        return JSON.parseArray(response.getBody(), Series.class);
     }
 
     @Override
-    @Retryable(retryFor = HttpException.class, backoff = @Backoff(multiplier = 1.5))
+    @Retryable(multiplier = 1.5)
     public Series getSeries(String id) {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         String uri = MessageFormat.format(GET_SERIES_URI, id);
-        HttpRequest request = HttpRequest.get(this.getUrl(uri));
-        request.header(X_API_KEY_HEADER_NAME, apiKey);
-        HttpResponse response = request.send();
-        if (response.statusCode() != 200)
-            return null;
-        return JSON.parseObject(response.bodyText(), Series.class);
-    }
 
-    private String getUrl(String uri) {
-        return settingsManager.get().getSonarr().getUrl() + uri;
+        ResponseEntity<String> response = defaultRestClient.get()
+                .uri(settingsManager.get().getSonarr().getUrl() + uri)
+                .header(X_API_KEY_HEADER_NAME, apiKey)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            return null;
+        }
+
+        return JSON.parseObject(response.getBody(), Series.class);
     }
 }

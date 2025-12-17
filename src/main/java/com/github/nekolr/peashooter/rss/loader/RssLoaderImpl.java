@@ -1,49 +1,48 @@
 package com.github.nekolr.peashooter.rss.loader;
 
-
-import com.github.nekolr.peashooter.config.SettingsManager;
-import jodd.http.HttpRequest;
-import jodd.http.HttpResponse;
-import jodd.http.ProxyInfo;
-import jodd.http.net.SocketHttpConnectionProvider;
-import jodd.io.FileUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RssLoaderImpl implements RssLoader {
-    private final SettingsManager settingsManager;
+
+    private final RestClient defaultRestClient;
+    private final RestClient proxyRestClient;
 
     @Override
     public String loadFromFile(String filepath) {
         try {
-            return FileUtil.readString(filepath);
+            return Files.readString(Paths.get(filepath), StandardCharsets.UTF_8);
         } catch (IOException e) {
+            log.error("Error reading file: {}", filepath, e);
             throw new RuntimeException(e);
         }
     }
 
     @Override
     public String load(String url, boolean useProxy) {
-        HttpRequest request = HttpRequest.get(url);
-        if (useProxy) {
-            this.setupProxy(request);
-        }
-        HttpResponse response = request.send();
-        if (response.statusCode() != 200) {
+        RestClient restClient = useProxy ? proxyRestClient : defaultRestClient;
+
+        ResponseEntity<String> response = restClient.get()
+                .uri(url)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
             return null;
         }
-        return response.bodyText();
-    }
 
-    private void setupProxy(HttpRequest request) {
-        String proxyIp = settingsManager.get().getHttpProxy().getIp();
-        Integer proxyPort = settingsManager.get().getHttpProxy().getPort();
-        SocketHttpConnectionProvider provider = new SocketHttpConnectionProvider();
-        provider.useProxy(ProxyInfo.httpProxy(proxyIp, proxyPort, null, null));
-        request.withConnectionProvider(provider);
+        return response.getBody();
     }
 }

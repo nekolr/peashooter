@@ -77,7 +77,7 @@ public class GroupServiceImpl implements IGroupService {
         }
         List<GroupDataSource> gdList = gdService.getByGroupId(group.getId());
         List<Long> dsList = gdList.stream().map(GroupDataSource::getDatasourceId).toList();
-        group.setDataSourceIds(dsList.toArray(new Long[dsList.size()]));
+        group.setDataSourceIds(dsList.toArray(new Long[0]));
         group.setMatchers(JSON.parseArray(group.getMatchersJson(), Matcher.class));
         return group;
     }
@@ -137,9 +137,13 @@ public class GroupServiceImpl implements IGroupService {
 
     @Override
     public void refreshRss(Long groupId) {
-        Group group = this.getById(groupId);
-        List<Item> items = new ArrayList<>();
+        Group group = this.groupRepository.findById(groupId).orElse(null);
+        if (Objects.isNull(group)) {
+            return;
+        }
         List<Matcher> matchers = JSON.parseArray(group.getMatchersJson(), Matcher.class);
+
+        List<Item> items = new ArrayList<>();
         ConvertContext convertContext = ConvertContext.builder()
                 .groupId(group.getId())
                 .referenceId(group.getReferenceId())
@@ -173,7 +177,7 @@ public class GroupServiceImpl implements IGroupService {
 
     @Override
     public String getAllRss() {
-        List<Group> groupList = this.findAll();
+        List<Group> groupList = this.groupRepository.findAll();
         List<SyndEntry> entryList = new ArrayList<>();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
         for (Group group : groupList) {
