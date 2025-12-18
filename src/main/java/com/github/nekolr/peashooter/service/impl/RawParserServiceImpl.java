@@ -1,6 +1,5 @@
 package com.github.nekolr.peashooter.service.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
@@ -217,7 +216,8 @@ public class RawParserServiceImpl implements IRawParserService {
 
             if (Files.exists(cachePath)) {
                 String json = Files.readString(cachePath, StandardCharsets.UTF_8);
-                cached = JSON.parseObject(json, SonarrIdAliasTitleCached.class);
+                cached = JacksonUtils.tryParse(() ->
+                    JacksonUtils.getObjectMapper().readValue(json, SonarrIdAliasTitleCached.class));
 
                 Map<String, List<FindAliasTitle.Title>> cachedMap = cached.titles().stream()
                         .filter(t -> Objects.nonNull(t.titles))
@@ -273,7 +273,8 @@ public class RawParserServiceImpl implements IRawParserService {
 
     private void writeCacheFile(SonarrIdAliasTitleCached cached) {
         try {
-            String json = JSON.toJSONString(cached);
+            String json = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().writeValueAsString(cached));
             Path cachePath = Paths.get(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
             // 确保父目录存在
             if (cachePath.getParent() != null) {

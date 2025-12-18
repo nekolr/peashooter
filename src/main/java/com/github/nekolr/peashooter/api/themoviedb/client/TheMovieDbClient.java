@@ -1,10 +1,10 @@
 package com.github.nekolr.peashooter.api.themoviedb.client;
 
-import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
 import com.github.nekolr.peashooter.api.themoviedb.rsp.FindAliasTitle;
 import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
 import com.github.nekolr.peashooter.config.SettingsManager;
+import com.github.nekolr.peashooter.util.JacksonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -83,7 +83,8 @@ public class TheMovieDbClient implements TheMovieDbApi {
             return Optional.empty();
         }
 
-        FindById findById = JSON.parseObject(response.getBody(), FindById.class);
+        FindById findById = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(response.getBody(), FindById.class));
         if (!CollectionUtils.isEmpty(findById.tv_results())) {
             return Optional.of(findById.tv_results().getFirst());
         }
@@ -104,7 +105,8 @@ public class TheMovieDbClient implements TheMovieDbApi {
             return Collections.emptyList();
         }
 
-        FindAliasTitle findAliasTitle = JSON.parseObject(response.getBody(), FindAliasTitle.class);
+        FindAliasTitle findAliasTitle = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(response.getBody(), FindAliasTitle.class));
         if (!CollectionUtils.isEmpty(findAliasTitle.results())) {
             return findAliasTitle.results();
         }

@@ -1,13 +1,13 @@
 package com.github.nekolr.peashooter.api.sonarr.client;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
 import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
 import com.github.nekolr.peashooter.config.SettingsManager;
+import com.github.nekolr.peashooter.util.JacksonUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -41,15 +41,23 @@ public class SonarrV3Client implements SonarrV3Api {
             return Collections.emptyList();
         }
 
-        JSONObject respObj = JSON.parseObject(response.getBody());
-        return JSON.parseArray(respObj.getString("records"), Queue.class);
+        JsonNode respObj = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readTree(response.getBody()));
+        JsonNode records = respObj.get("records");
+        if (records != null && records.isArray()) {
+            return JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(records.toString(),
+                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Queue.class)));
+        }
+        return Collections.emptyList();
     }
 
     @Override
     public Boolean addRssIndexer(AddRssIndexer indexer) {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
 
-        String requestBody = JSON.toJSONString(indexer);
+        String requestBody = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().writeValueAsString(indexer));
         ResponseEntity<String> response = defaultRestClient.post()
                 .uri(settingsManager.get().getSonarr().getUrl() + ADD_INDEXER_URI)
                 .header(X_API_KEY_HEADER_NAME, apiKey)
@@ -80,7 +88,8 @@ public class SonarrV3Client implements SonarrV3Api {
             return null;
         }
 
-        return JSON.parseObject(response.getBody(), Status.class);
+        return JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(response.getBody(), Status.class));
     }
 
     @Override
@@ -98,7 +107,9 @@ public class SonarrV3Client implements SonarrV3Api {
             return null;
         }
 
-        return JSON.parseArray(response.getBody(), Series.class);
+        return JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(response.getBody(),
+                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Series.class)));
     }
 
     @Override
@@ -117,6 +128,7 @@ public class SonarrV3Client implements SonarrV3Api {
             return null;
         }
 
-        return JSON.parseObject(response.getBody(), Series.class);
+        return JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(response.getBody(), Series.class));
     }
 }

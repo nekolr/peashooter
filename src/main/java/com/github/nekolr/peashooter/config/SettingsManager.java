@@ -1,7 +1,6 @@
 package com.github.nekolr.peashooter.config;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONWriter;
+import com.github.nekolr.peashooter.util.JacksonUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -30,7 +29,8 @@ public class SettingsManager {
 
     private void dumpFile() {
         try {
-            String prettyJson = JSON.toJSONString(settings, JSONWriter.Feature.PrettyFormat);
+            String prettyJson = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(settings));
             Path filepath = Paths.get(SETTINGS_DIR + SETTINGS_FILE_NAME);
             Files.writeString(filepath, prettyJson, StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);

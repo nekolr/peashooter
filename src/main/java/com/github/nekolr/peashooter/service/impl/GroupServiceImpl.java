@@ -1,6 +1,5 @@
 package com.github.nekolr.peashooter.service.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.controller.request.group.SaveGroup;
 import com.github.nekolr.peashooter.controller.request.group.GetGroupList;
@@ -17,6 +16,7 @@ import com.github.nekolr.peashooter.rss.writer.RssWriter;
 import com.github.nekolr.peashooter.service.IGroupDataSourceService;
 import com.github.nekolr.peashooter.service.IGroupService;
 import com.github.nekolr.peashooter.util.FeedUtils;
+import com.github.nekolr.peashooter.util.JacksonUtils;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import lombok.RequiredArgsConstructor;
@@ -78,7 +78,9 @@ public class GroupServiceImpl implements IGroupService {
         List<GroupDataSource> gdList = gdService.getByGroupId(group.getId());
         List<Long> dsList = gdList.stream().map(GroupDataSource::getDatasourceId).toList();
         group.setDataSourceIds(dsList.toArray(new Long[0]));
-        group.setMatchers(JSON.parseArray(group.getMatchersJson(), Matcher.class));
+        group.setMatchers(JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(group.getMatchersJson(),
+                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Matcher.class))));
         return group;
     }
 
@@ -114,7 +116,8 @@ public class GroupServiceImpl implements IGroupService {
         Group group = groupMapper.toDomain(saveGroup);
 
         if (!CollectionUtils.isEmpty(saveGroup.matchers())) {
-            group.setMatchersJson(JSON.toJSONString(saveGroup.matchers()));
+            group.setMatchersJson(JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().writeValueAsString(saveGroup.matchers())));
         }
         this.save(group);
 
@@ -141,7 +144,9 @@ public class GroupServiceImpl implements IGroupService {
         if (Objects.isNull(group)) {
             return;
         }
-        List<Matcher> matchers = JSON.parseArray(group.getMatchersJson(), Matcher.class);
+        List<Matcher> matchers = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(group.getMatchersJson(),
+                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Matcher.class)));
 
         List<Item> items = new ArrayList<>();
         ConvertContext convertContext = ConvertContext.builder()

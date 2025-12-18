@@ -1,11 +1,11 @@
 package com.github.nekolr.peashooter.security;
 
-import com.alibaba.fastjson2.JSON;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.config.UserSettings;
 import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
 import com.github.nekolr.peashooter.entity.dto.JsonBean;
 import com.github.nekolr.peashooter.service.IUserService;
+import com.github.nekolr.peashooter.util.JacksonUtils;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -149,7 +149,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private void sendUnauthorizedResponse(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(JSON.toJSONString(JsonBean.fail("unauthorized")));
+        String json = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().writeValueAsString(JsonBean.fail("unauthorized")));
+        response.getWriter().write(json);
     }
 
     private String resolveToken(HttpServletRequest request) {

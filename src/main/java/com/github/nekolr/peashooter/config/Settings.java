@@ -2,8 +2,12 @@ package com.github.nekolr.peashooter.config;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Settings {
 
     private Basic basic;
@@ -13,6 +17,8 @@ public class Settings {
     private TheMovieDb theMovieDb;
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class Basic {
         private String apiKey;
@@ -20,6 +26,8 @@ public class Settings {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class Sonarr {
         private String url;
@@ -28,6 +36,8 @@ public class Settings {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class QBitTorrent {
         private String url;
@@ -36,6 +46,8 @@ public class Settings {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class HttpProxy {
         private String ip;
@@ -43,6 +55,8 @@ public class Settings {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class TheMovieDb {
         private String apiKey;
