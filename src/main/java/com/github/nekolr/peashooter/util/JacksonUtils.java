@@ -3,6 +3,7 @@ package com.github.nekolr.peashooter.util;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import org.springframework.boot.json.JsonParseException;
@@ -17,6 +18,8 @@ public class JacksonUtils {
 
     static {
         objectMapper = new ObjectMapper();
+        // 注册 Java 8 时间模块
+        objectMapper.registerModule(new JavaTimeModule());
         // 忽略未知属性
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         // 配置为接受空字符串作为 null

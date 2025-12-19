@@ -7,6 +7,7 @@ import com.github.nekolr.peashooter.entity.domain.DownloadInfo;
 import com.github.nekolr.peashooter.service.IDownloadInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.quartz.*;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ public class RenameTorrentJob extends QuartzJobBean {
     private final IDownloadInfoService downloadInfoService;
 
     @Override
-    protected void executeInternal(JobExecutionContext context) {
+    protected void executeInternal(@NonNull JobExecutionContext context) {
         List<DownloadInfo> downloadInfoList = downloadInfoService.findAll();
         List<Queue> queueList = sonarrV3Api.getQueueList();
         for (DownloadInfo info : downloadInfoList) {

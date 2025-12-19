@@ -50,11 +50,11 @@ public class TheMovieDbClient implements TheMovieDbApi {
     public List<FindAliasTitle.Title> findAliasTitles(Integer seriesId) {
         String apiKey = settingsManager.get().getTheMovieDb().getApiKey();
         Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
-        String uri = MessageFormat.format(FIND_ALIAS_TITLE_URI, String.valueOf(seriesId));
+        String url = THE_MOVIE_DB_HOST + MessageFormat.format(FIND_ALIAS_TITLE_URI, String.valueOf(seriesId));
         if (useProxy) {
-            return this.doFindAliasTitles(proxyRestClient, uri, apiKey);
+            return this.doFindAliasTitles(proxyRestClient, url, apiKey);
         } else {
-            return this.doFindAliasTitles(defaultRestClient, uri, apiKey);
+            return this.doFindAliasTitles(defaultRestClient, url, apiKey);
         }
     }
 
