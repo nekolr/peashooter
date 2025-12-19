@@ -32,7 +32,12 @@ public class SonarrV3Client implements SonarrV3Api {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
 
         ResponseEntity<String> response = defaultRestClient.get()
-                .uri(settingsManager.get().getSonarr().getUrl() + GET_QUEUE_LIST_URI)
+                .uri(settingsManager.get().getSonarr().getUrl() + GET_QUEUE_LIST_URI, uriBuilder -> uriBuilder
+                        .queryParam("page", 1)
+                        .queryParam("pageSize", 50)
+                        .queryParam("includeSeries", true)
+                        .queryParam("includeEpisode", true)
+                        .build())
                 .header(X_API_KEY_HEADER_NAME, apiKey)
                 .retrieve()
                 .toEntity(String.class);
@@ -46,8 +51,8 @@ public class SonarrV3Client implements SonarrV3Api {
         JsonNode records = respObj.get("records");
         if (records != null && records.isArray()) {
             return JacksonUtils.tryParse(() ->
-                JacksonUtils.getObjectMapper().readValue(records.toString(),
-                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Queue.class)));
+                    JacksonUtils.getObjectMapper().readValue(records.toString(),
+                            JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Queue.class)));
         }
         return Collections.emptyList();
     }
@@ -109,7 +114,7 @@ public class SonarrV3Client implements SonarrV3Api {
 
         return JacksonUtils.tryParse(() ->
                 JacksonUtils.getObjectMapper().readValue(response.getBody(),
-                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Series.class)));
+                        JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Series.class)));
     }
 
     @Override
