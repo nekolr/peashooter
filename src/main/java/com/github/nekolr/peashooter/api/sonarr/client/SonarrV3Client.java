@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
-import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -63,6 +62,7 @@ public class SonarrV3Client implements SonarrV3Api {
 
         String requestBody = JacksonUtils.tryParse(() ->
                 JacksonUtils.getObjectMapper().writeValueAsString(indexer));
+
         ResponseEntity<String> response = defaultRestClient.post()
                 .uri(settingsManager.get().getSonarr().getUrl() + ADD_INDEXER_URI)
                 .header(X_API_KEY_HEADER_NAME, apiKey)
@@ -118,7 +118,6 @@ public class SonarrV3Client implements SonarrV3Api {
     }
 
     @Override
-    @Retryable(multiplier = 1.5)
     public Series getSeries(String id) {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         String uri = MessageFormat.format(GET_SERIES_URI, id);

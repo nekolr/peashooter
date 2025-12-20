@@ -35,18 +35,19 @@ public class TheMovieDbClient implements TheMovieDbApi {
     private static final String FIND_SERIES_URI_PARAM_EXTERNAL_SOURCE = "external_source";
 
     @Override
-    @Retryable(multiplier = 1.5)
+    @Retryable(multiplier = 2)
     public Optional<FindById.TvResult> findByImdbId(String imdbId) {
         return this.findById(imdbId, DEFAULT_EXTERNAL_SOURCE);
     }
 
     @Override
-    @Retryable(multiplier = 1.5)
+    @Retryable(multiplier = 2)
     public Optional<FindById.TvResult> findByTvdbId(String tvdbId) {
         return this.findById(tvdbId, TVDB_EXTERNAL_SOURCE);
     }
 
     @Override
+    @Retryable(multiplier = 2)
     public List<FindAliasTitle.Title> findAliasTitles(Integer seriesId) {
         String apiKey = settingsManager.get().getTheMovieDb().getApiKey();
         Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();

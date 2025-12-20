@@ -11,10 +11,11 @@ import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -33,9 +34,9 @@ public class QBittorrentClient implements QBittorrentApi {
     private final Map<String, SID> sidCache = new ConcurrentHashMap<>();
 
     @Override
-    public SID login() {
+    public Optional<SID> login() {
         if (sidCache.containsKey(COOKIE)) {
-            return sidCache.get(COOKIE);
+            return Optional.of(sidCache.get(COOKIE));
         } else {
             String url = settingsManager.get().getQbittorrent().getUrl() + LOGIN_URI;
             String username = settingsManager.get().getQbittorrent().getUsername();
@@ -53,7 +54,7 @@ public class QBittorrentClient implements QBittorrentApi {
                     .toEntity(String.class);
 
             if (response.getStatusCode() != HttpStatus.OK) {
-                return null;
+                return Optional.empty();
             }
 
             HttpHeaders headers = response.getHeaders();
@@ -62,59 +63,63 @@ public class QBittorrentClient implements QBittorrentApi {
                 String sidValue = setCookieHeader.split(";")[0].substring(4);
                 SID sid = new SID(sidValue);
                 sidCache.put(COOKIE, sid);
-                return sid;
+                return Optional.of(sid);
             }
-            return null;
+            return Optional.empty();
         }
     }
 
     @Override
     @Retryable(multiplier = 1.5)
-    public AppVersion getAppVersion() {
-        String url = settingsManager.get().getQbittorrent().getUrl() + APP_VERSION_URI;
-        String cookieValue = COOKIE_VALUE_PREFIX + this.login().sid();
+    public Optional<AppVersion> getAppVersion() {
+        try {
+            String url = settingsManager.get().getQbittorrent().getUrl() + APP_VERSION_URI;
+            String cookieValue = COOKIE_VALUE_PREFIX + this.login().orElseThrow().sid();
 
-        ResponseEntity<String> response = defaultRestClient.get()
-                .uri(url)
-                .header(HttpHeaders.COOKIE, cookieValue)
-                .retrieve()
-                .toEntity(String.class);
+            ResponseEntity<String> response = defaultRestClient.get()
+                    .uri(url)
+                    .header(HttpHeaders.COOKIE, cookieValue)
+                    .retrieve()
+                    .toEntity(String.class);
 
-        if (response.getStatusCode() != HttpStatus.OK) {
-            return null;
+            if (response.getStatusCode() != HttpStatus.OK) {
+                return Optional.empty();
+            }
+
+            return Optional.of(new AppVersion(response.getBody()));
+        } catch (HttpServerErrorException e) {
+            if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                sidCache.clear();
+            }
+            throw e;
         }
-
-        if (response.getStatusCode() == HttpStatus.FORBIDDEN) {
-            sidCache.clear();
-            throw new HttpClientErrorException(HttpStatus.FORBIDDEN, "cookies expired");
-        }
-
-        return new AppVersion(response.getBody());
     }
 
     @Override
     @Retryable(multiplier = 1.5)
     public boolean renameTorrent(String hash, String name) {
-        String url = settingsManager.get().getQbittorrent().getUrl() + RENAME_TORRENT_URI;
-        String cookieValue = COOKIE_VALUE_PREFIX + this.login().sid();
+        try {
+            String url = settingsManager.get().getQbittorrent().getUrl() + RENAME_TORRENT_URI;
+            String cookieValue = COOKIE_VALUE_PREFIX + this.login().orElseThrow().sid();
 
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add(RENAME_TORRENT_URI_PARAM_HASH, hash);
-        formData.add(RENAME_TORRENT_URI_PARAM_NAME, name);
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add(RENAME_TORRENT_URI_PARAM_HASH, hash);
+            formData.add(RENAME_TORRENT_URI_PARAM_NAME, name);
 
-        ResponseEntity<Void> response = defaultRestClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header(HttpHeaders.COOKIE, cookieValue)
-                .body(formData)
-                .retrieve()
-                .toBodilessEntity();
+            ResponseEntity<Void> response = defaultRestClient.post()
+                    .uri(url)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .header(HttpHeaders.COOKIE, cookieValue)
+                    .body(formData)
+                    .retrieve()
+                    .toBodilessEntity();
 
-        if (response.getStatusCode() == HttpStatus.FORBIDDEN) {
-            sidCache.clear();
-            throw new HttpClientErrorException(HttpStatus.FORBIDDEN, "cookies expired");
+            return response.getStatusCode() == HttpStatus.OK;
+        } catch (HttpServerErrorException e) {
+            if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                sidCache.clear();
+            }
+            throw e;
         }
-
-        return response.getStatusCode() == HttpStatus.OK;
     }
 }

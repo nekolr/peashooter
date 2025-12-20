@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +32,8 @@ public class SettingsServiceImpl implements ISettingsService {
 
     @Override
     public boolean testQb() {
-        AppVersion appVersion = qBittorrentApi.getAppVersion();
-        return Objects.nonNull(appVersion);
+        Optional<AppVersion> appVersionOptional = qBittorrentApi.getAppVersion();
+        return appVersionOptional.isPresent();
     }
 
     @Override
