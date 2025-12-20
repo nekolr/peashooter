@@ -95,8 +95,7 @@ public class TheMovieDbClient implements TheMovieDbApi {
 
     private List<FindAliasTitle.Title> doFindAliasTitles(RestClient restClient, String url, String apiKey) {
         ResponseEntity<String> response = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(url)
+                .uri(url, uriBuilder -> uriBuilder
                         .queryParam(FIND_SERIES_URI_PARAM_API_KEY, apiKey)
                         .build())
                 .retrieve()
