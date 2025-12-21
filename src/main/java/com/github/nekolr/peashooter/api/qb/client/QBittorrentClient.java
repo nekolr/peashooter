@@ -11,7 +11,7 @@ import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.Map;
@@ -87,7 +87,7 @@ public class QBittorrentClient implements QBittorrentApi {
             }
 
             return Optional.of(new AppVersion(response.getBody()));
-        } catch (HttpServerErrorException e) {
+        } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
                 sidCache.clear();
             }
@@ -115,7 +115,7 @@ public class QBittorrentClient implements QBittorrentApi {
                     .toBodilessEntity();
 
             return response.getStatusCode() == HttpStatus.OK;
-        } catch (HttpServerErrorException e) {
+        } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
                 sidCache.clear();
             }
