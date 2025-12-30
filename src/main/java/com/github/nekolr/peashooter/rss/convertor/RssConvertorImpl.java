@@ -69,7 +69,6 @@ public class RssConvertorImpl implements RssConvertor {
         List<Matcher> matchers = ctx.matchers();
         Series series = sonarrV3Api.getSeries(ctx.referenceId());
         if (Objects.isNull(series)) {
-            log.warn("转换分组 {} 失败，Entry Title：{}", ctx.groupId(), epTitle);
             return null;
         }
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();

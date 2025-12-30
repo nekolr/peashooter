@@ -122,17 +122,18 @@ public class SonarrV3Client implements SonarrV3Api {
         String apiKey = settingsManager.get().getSonarr().getApiKey();
         String uri = MessageFormat.format(GET_SERIES_URI, id);
 
-        ResponseEntity<String> response = defaultRestClient.get()
+        return defaultRestClient.get()
                 .uri(settingsManager.get().getSonarr().getUrl() + uri)
                 .header(X_API_KEY_HEADER_NAME, apiKey)
-                .retrieve()
-                .toEntity(String.class);
-
-        if (response.getStatusCode() != HttpStatus.OK) {
-            return null;
-        }
-
-        return JacksonUtils.tryParse(() ->
-                JacksonUtils.getObjectMapper().readValue(response.getBody(), Series.class));
+                .exchange((_, response) -> {
+                    if (response.getStatusCode() != HttpStatus.OK) {
+                        log.error("Error when fetching series with ID: {}, status code: {}, body: {}",
+                                id, response.getStatusCode(), response.getBody());
+                        return null;
+                    } else {
+                        return JacksonUtils.tryParse(() ->
+                                JacksonUtils.getObjectMapper().readValue(response.getBody(), Series.class));
+                    }
+                });
     }
 }
