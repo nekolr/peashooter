@@ -128,7 +128,7 @@ public class SonarrV3Client implements SonarrV3Api {
                 .exchange((_, response) -> {
                     if (response.getStatusCode() != HttpStatus.OK) {
                         log.error("Error when fetching series with ID: {}, status code: {}, body: {}",
-                                id, response.getStatusCode(), response.getBody());
+                                id, response.getStatusCode(), response.bodyTo(String.class));
                         return null;
                     } else {
                         return JacksonUtils.tryParse(() ->
