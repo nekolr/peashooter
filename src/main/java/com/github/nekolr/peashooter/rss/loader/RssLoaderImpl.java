@@ -3,7 +3,6 @@ package com.github.nekolr.peashooter.rss.loader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -34,15 +33,16 @@ public class RssLoaderImpl implements RssLoader {
     public String load(String url, boolean useProxy) {
         RestClient restClient = useProxy ? proxyRestClient : defaultRestClient;
 
-        ResponseEntity<String> response = restClient.get()
+        return restClient.get()
                 .uri(url)
-                .retrieve()
-                .toEntity(String.class);
+                .exchange((_, response) -> {
+                    if (!response.getStatusCode().equals(HttpStatus.OK)) {
+                        log.error("Error loading file: {}", url);
+                        return null;
+                    } else {
+                        return response.bodyTo(String.class);
+                    }
+                });
 
-        if (response.getStatusCode() != HttpStatus.OK) {
-            return null;
-        }
-
-        return response.getBody();
     }
 }
