@@ -149,13 +149,15 @@ public class DataSourceServiceImpl implements IDataSourceService {
         int count = 0;
         Matcher matcher = cmd.matcher();
         Integer season = matcher.season();
+        Integer episodeOffset = matcher.episodeOffset();
         Pattern pattern = Pattern.compile(matcher.regexp());
         List<MatchResult> matchResultList = new ArrayList<>();
         for (ItemTitle itemTitle : itemTitles) {
             java.util.regex.Matcher m = pattern.matcher(itemTitle.title());
             if (m.find(matcher.offset())) {
                 String episodeNum = m.group(EPISODE_NUM_GROUP_NAME);
-                String epNum = FillUpZeroUtil.fill(episodeNum);
+                int adjustedEpisodeNum = Integer.parseInt(episodeNum) + (episodeOffset != null ? episodeOffset : 0);
+                String epNum = FillUpZeroUtil.fill(String.valueOf(adjustedEpisodeNum));
                 String epTitle = EPISODE_TITLE_PREFIX + epNum;
                 Format format = new MessageFormat(EPISODE_TITLE_TEMPLATE);
                 Object[] args = new Object[]{cmd.series(), season, epNum, epTitle, cmd.language(), cmd.quality()};
