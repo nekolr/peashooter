@@ -54,9 +54,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             // 登录请求
             "/api/auth/login",
 
-            // 种子下载
-            "/api/torrents",
-
             // 静态资源
             "/assets/**",
             "/resource/**",

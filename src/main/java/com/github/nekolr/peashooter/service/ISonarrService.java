@@ -13,5 +13,7 @@ public interface ISonarrService {
 
     Boolean setupAllGroupIndexer();
 
+    void setupOnGrabWebhook();
+
     void syncSeriesLatest();
 }

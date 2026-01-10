@@ -1,7 +1,9 @@
 package com.github.nekolr.peashooter.api.sonarr.client;
 
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
+import com.github.nekolr.peashooter.api.sonarr.req.AddNotification;
 import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.rsp.Notification;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
@@ -76,6 +78,45 @@ public class SonarrV3Client implements SonarrV3Api {
         } else {
             log.info("请求添加 Indexer 失败：{}", response.getBody());
             return Boolean.FALSE;
+        }
+    }
+
+    @Override
+    public List<Notification> getNotifications() {
+        String apiKey = settingsManager.get().getSonarr().getApiKey();
+
+        ResponseEntity<String> response = defaultRestClient.get()
+                .uri(settingsManager.get().getSonarr().getUrl() + GET_NOTIFICATION_URI)
+                .header(X_API_KEY_HEADER_NAME, apiKey)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            return Collections.emptyList();
+        }
+
+        return JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().readValue(response.getBody(),
+                        JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Notification.class)));
+    }
+
+    @Override
+    public void addNotification(AddNotification notification) {
+        String requestBody = JacksonUtils.tryParse(() ->
+                JacksonUtils.getObjectMapper().writeValueAsString(notification));
+
+        ResponseEntity<String> response = defaultRestClient.post()
+                .uri(settingsManager.get().getSonarr().getUrl() + ADD_NOTIFICATION_URI)
+                .header(X_API_KEY_HEADER_NAME, settingsManager.get().getSonarr().getApiKey())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .toEntity(String.class);
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+            log.info("成功添加 Sonarr Webhook 通知：{}", notification.getName());
+        } else {
+            log.info("请求添加 Webhook 通知失败：{}", response.getBody());
         }
     }
 

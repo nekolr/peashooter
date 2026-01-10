@@ -1,7 +1,10 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
+import com.github.nekolr.peashooter.api.sonarr.req.AddNotification;
 import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.req.NotificationField;
+import com.github.nekolr.peashooter.api.sonarr.rsp.Notification;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
 import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
@@ -135,5 +138,64 @@ public class SonarrServiceImpl implements ISonarrService {
         AddRssIndexer indexer = new AddRssIndexer(APPLICATION_NAME, baseUrl);
         indexer.setupDefaultFields();
         return sonarrV3Api.addRssIndexer(indexer);
+    }
+
+    @Override
+    public void setupOnGrabWebhook() {
+        String apiKey = settingsManager.get().getBasic().getApiKey();
+        String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+
+        String webhookUrl = getWebhookUrl(mappingUrl);
+
+        List<Notification> existingNotifications = sonarrV3Api.getNotifications();
+        boolean webhookExists = existingNotifications.stream()
+                .anyMatch(n -> ON_GRAB_WEBHOOK_NAME.equals(n.name()));
+
+        if (webhookExists) {
+            log.info("{} 已存在，跳过创建", ON_GRAB_WEBHOOK_NAME);
+            return;
+        }
+
+        List<NotificationField> fields = List.of(
+                new NotificationField(
+                        "url",
+                        "Webhook URL",
+                        null,
+                        webhookUrl + "?apiKey=" + apiKey,
+                        "url",
+                        false,
+                        null,
+                        "normal",
+                        false
+                ),
+                new NotificationField(
+                        "method",
+                        "Method",
+                        "Which HTTP method to use submit to Webservice",
+                        1,
+                        "select",
+                        false,
+                        List.of(new NotificationField.SelectOption(1, "POST"),
+                                new NotificationField.SelectOption(2, "PUT")),
+                        "normal",
+                        false
+                ));
+
+        AddNotification notification = new AddNotification();
+        notification.setName(ON_GRAB_WEBHOOK_NAME);
+        notification.setFields(fields);
+        notification.setOnGrab(true);
+        notification.setImplementationName("Webhook");
+        notification.setImplementation("Webhook");
+        notification.setConfigContract("WebhookSettings");
+
+        sonarrV3Api.addNotification(notification);
+    }
+
+    private String getWebhookUrl(String mappingUrl) {
+        if (mappingUrl.endsWith("/")) {
+            mappingUrl = mappingUrl.substring(0, mappingUrl.length() - 1);
+        }
+        return mappingUrl + "/api/torrents/onGrab";
     }
 }

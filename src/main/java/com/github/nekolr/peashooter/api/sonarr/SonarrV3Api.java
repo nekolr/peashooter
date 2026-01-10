@@ -1,7 +1,9 @@
 package com.github.nekolr.peashooter.api.sonarr;
 
 
+import com.github.nekolr.peashooter.api.sonarr.req.AddNotification;
 import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.rsp.Notification;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
 import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
@@ -14,6 +16,8 @@ public interface SonarrV3Api {
 
     String ADD_INDEXER_URI = "/api/v3/indexer";
 
+    String ADD_NOTIFICATION_URI = "/api/v3/notification";
+
     String GET_STATUS_URI = "/api/v3/system/status";
 
     String GET_SERIES_LIST_URI = "/api/v3/series";
@@ -22,9 +26,15 @@ public interface SonarrV3Api {
 
     String GET_QUEUE_LIST_URI = "/api/v3/queue";
 
+    String GET_NOTIFICATION_URI = "/api/v3/notification";
+
     List<Queue> getQueueList();
 
     Boolean addRssIndexer(AddRssIndexer indexer);
+
+    List<Notification> getNotifications();
+
+    void addNotification(AddNotification notification);
 
     Status getStatus();
 

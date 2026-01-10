@@ -16,6 +16,7 @@ public interface Peashooter {
     String AUTOMATED = "automated";
     String APPLICATION_NAME = Peashooter.class.getSimpleName();
     String RSS_TITLE = APPLICATION_NAME + " " + VERSION;
+    String ON_GRAB_WEBHOOK_NAME = APPLICATION_NAME + " " + "OnGrab Webhook";
 
     /**
      * 种子重命名任务执行间隔时间（秒）
