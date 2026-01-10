@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -92,7 +94,8 @@ public class RssConvertorImpl implements RssConvertor {
                 Integer season = matcher.season();
                 SyndEnclosure first = enclosures.getFirst();
                 String referenceId = ctx.referenceId();
-                String url = GetTorrentLinkUtil.formatLink(mappingUrl, first.getUrl(), epTitle, episodeNum, season, referenceId);
+                String enclosureUrl = URLEncoder.encode(first.getUrl(), StandardCharsets.UTF_8);
+                String url = GetTorrentLinkUtil.formatLink(mappingUrl, enclosureUrl, epTitle, episodeNum, season, referenceId);
 
                 Enclosure enclosure = new Enclosure(url, first.getLength(), first.getType());
                 item = new Item(epTitle, link, pubDate, guid, enclosure, series.id(), season, Integer.parseInt(episodeNum), null);
