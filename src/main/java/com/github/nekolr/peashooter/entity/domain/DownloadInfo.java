@@ -19,7 +19,7 @@ public class DownloadInfo {
     private Long id;
 
     /**
-     * 连续剧名称
+     * 剧集 ID
      */
     private String series;
 

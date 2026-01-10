@@ -1,17 +1,10 @@
 package com.github.nekolr.peashooter.controller;
 
+import com.github.nekolr.peashooter.entity.dto.GrabEvent;
 import com.github.nekolr.peashooter.service.IDownloadInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("api/torrents")
@@ -20,24 +13,12 @@ public class TorrentsController {
 
     private final IDownloadInfoService downloadInfoService;
 
-
-    @GetMapping
-    public void torrent(@RequestParam("title") String title, @RequestParam("episode") Integer episode,
-                        @RequestParam("season") Integer season, @RequestParam("series") String series,
-                        @RequestParam("url") String url, HttpServletResponse response) {
-        downloadInfoService.onDownload(series, title, season, episode);
-        try {
-            String decodedUrl = URLDecoder.decode(url, StandardCharsets.UTF_8);
-            if (decodedUrl.startsWith("magnet:")) {
-                // magnet 链接使用 307 临时重定向，某些下载器可以识别
-                response.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
-                response.setHeader("Location", decodedUrl);
-            } else {
-                // .torrent 文件链接，使用重定向
-                response.sendRedirect(decodedUrl);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @PostMapping("/onGrab")
+    public void onGrab(@RequestBody GrabEvent grabEvent) {
+        Integer seriesId = grabEvent.series().id();
+        Integer season = grabEvent.episodes().getFirst().seasonNumber();
+        Integer episode = grabEvent.episodes().getFirst().episodeNumber();
+        String title = grabEvent.release().releaseTitle();
+        downloadInfoService.onDownload(String.valueOf(seriesId), title, season, episode);
     }
 }

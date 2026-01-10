@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -73,7 +71,7 @@ public class RssConvertorImpl implements RssConvertor {
         if (Objects.isNull(series)) {
             return null;
         }
-        String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+
         for (Matcher matcher : matchers) {
             Pattern pattern = Pattern.compile(matcher.regexp());
             java.util.regex.Matcher m = pattern.matcher(epTitle);
@@ -93,11 +91,8 @@ public class RssConvertorImpl implements RssConvertor {
                 List<SyndEnclosure> enclosures = FeedUtils.getEnclosures(entry);
                 Integer season = matcher.season();
                 SyndEnclosure first = enclosures.getFirst();
-                String referenceId = ctx.referenceId();
-                String enclosureUrl = URLEncoder.encode(first.getUrl(), StandardCharsets.UTF_8);
-                String url = GetTorrentLinkUtil.formatLink(mappingUrl, enclosureUrl, epTitle, episodeNum, season, referenceId);
 
-                Enclosure enclosure = new Enclosure(url, first.getLength(), first.getType());
+                Enclosure enclosure = new Enclosure(first.getUrl(), first.getLength(), first.getType());
                 item = new Item(epTitle, link, pubDate, guid, enclosure, series.id(), season, Integer.parseInt(episodeNum), null);
             }
         }
