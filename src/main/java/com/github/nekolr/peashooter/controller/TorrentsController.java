@@ -29,10 +29,9 @@ public class TorrentsController {
         try {
             String decodedUrl = URLDecoder.decode(url, StandardCharsets.UTF_8);
             if (decodedUrl.startsWith("magnet:")) {
-                // magnet 链接无法使用 sendRedirect，直接返回链接内容
-                response.setContentType("text/plain");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(decodedUrl);
+                // magnet 链接使用 307 临时重定向，某些下载器可以识别
+                response.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+                response.setHeader("Location", decodedUrl);
             } else {
                 // .torrent 文件链接，使用重定向
                 response.sendRedirect(decodedUrl);
