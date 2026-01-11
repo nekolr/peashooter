@@ -25,6 +25,8 @@ public class TorrentsController {
             String downloadId = grabEvent.downloadId();
             if (!qBittorrentApi.renameTorrent(downloadId, title)) {
                 log.warn("Failed to rename torrent {}", title);
+            } else {
+                log.info("Successfully rename torrent {}: {}", downloadId, title);
             }
         }
         return JsonBean.ok();
