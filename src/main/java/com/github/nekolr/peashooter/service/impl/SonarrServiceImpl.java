@@ -1,16 +1,16 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
-import com.github.nekolr.peashooter.api.sonarr.req.AddNotification;
-import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
-import com.github.nekolr.peashooter.api.sonarr.req.NotificationField;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Notification;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
+import com.github.nekolr.peashooter.api.sonarr.request.AddWebhookNotification;
+import com.github.nekolr.peashooter.api.sonarr.request.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.request.NotificationField;
+import com.github.nekolr.peashooter.api.sonarr.response.Notification;
+import com.github.nekolr.peashooter.api.sonarr.response.Series;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
+import com.github.nekolr.peashooter.api.themoviedb.response.FindById;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.entity.domain.SeriesName;
-import com.github.nekolr.peashooter.entity.dto.SeriesNameDto;
+import com.github.nekolr.peashooter.dto.SeriesNameDto;
 import com.github.nekolr.peashooter.service.ISeriesNameService;
 import com.github.nekolr.peashooter.service.ISonarrService;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +57,7 @@ public class SonarrServiceImpl implements ISonarrService {
 
     @Override
     @Caching(evict = {@CacheEvict(key = "'all'", beforeInvocation = true)}, cacheable = {@Cacheable(key = "'all'")})
-    public List<SeriesNameDto> refreshSeriesName() {
+    public List<SeriesNameDto> refreshSeriesNameList() {
         List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
             return Collections.emptyList();
@@ -94,7 +94,7 @@ public class SonarrServiceImpl implements ISonarrService {
 
     @Override
     @CacheEvict(key = "'all'", beforeInvocation = true)
-    public void syncSeriesLatest() {
+    public void syncSeriesNameList() {
         final long REFRESH_COUNT = 100;
         List<Series> seriesList = sonarrV3Api.getSeriesList();
         if (CollectionUtils.isEmpty(seriesList)) {
@@ -134,7 +134,7 @@ public class SonarrServiceImpl implements ISonarrService {
     public Boolean setupAllGroupIndexer() {
         String apiKey = settingsManager.get().getBasic().getApiKey();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
-        String baseUrl = getAllGroupLink(mappingUrl) + "?apiKey=" + apiKey;
+        String baseUrl = getAllGroupRssFileUrl(mappingUrl) + "?apiKey=" + apiKey;
         AddRssIndexer indexer = new AddRssIndexer(APPLICATION_NAME, baseUrl);
         indexer.setupDefaultFields();
         return sonarrV3Api.addRssIndexer(indexer);
@@ -181,7 +181,7 @@ public class SonarrServiceImpl implements ISonarrService {
                         false
                 ));
 
-        AddNotification notification = new AddNotification();
+        AddWebhookNotification notification = new AddWebhookNotification();
         notification.setName(ON_GRAB_WEBHOOK_NAME);
         notification.setFields(fields);
         notification.setOnGrab(true);
@@ -189,7 +189,7 @@ public class SonarrServiceImpl implements ISonarrService {
         notification.setImplementation("Webhook");
         notification.setConfigContract("WebhookSettings");
 
-        sonarrV3Api.addNotification(notification);
+        sonarrV3Api.addWebhookNotification(notification);
     }
 
     private String getWebhookUrl(String mappingUrl) {

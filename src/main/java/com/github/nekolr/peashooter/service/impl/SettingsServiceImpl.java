@@ -1,20 +1,18 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.api.qb.QBittorrentApi;
-import com.github.nekolr.peashooter.api.qb.rsp.AppVersion;
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
+import com.github.nekolr.peashooter.api.sonarr.response.Status;
 import com.github.nekolr.peashooter.config.Settings;
 import com.github.nekolr.peashooter.config.Settings.*;
 import com.github.nekolr.peashooter.config.SettingsManager;
-import com.github.nekolr.peashooter.controller.request.settings.*;
+import com.github.nekolr.peashooter.controller.cmd.settings.*;
 import com.github.nekolr.peashooter.service.ISettingsService;
 import com.github.nekolr.peashooter.util.RandomUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,17 +30,16 @@ public class SettingsServiceImpl implements ISettingsService {
 
     @Override
     public boolean testQb() {
-        Optional<AppVersion> appVersionOptional = qBittorrentApi.getAppVersion();
-        return appVersionOptional.isPresent();
+        return qBittorrentApi.getAppVersion().isPresent();
     }
 
     @Override
-    public void setBasic(SetBasic setting) {
+    public void setBasic(SetBasicCmd cmd) {
         Settings settings = settingsManager.get();
 
         Basic basic = Settings.Basic.builder()
-                .mappingUrl(setting.mappingUrl())
-                .apiKey(setting.apiKey())
+                .mappingUrl(cmd.mappingUrl())
+                .apiKey(cmd.apiKey())
                 .build();
 
         settings.setBasic(basic);
@@ -50,12 +47,12 @@ public class SettingsServiceImpl implements ISettingsService {
     }
 
     @Override
-    public void setProxy(SetHttpProxy setting) {
+    public void setProxy(SetHttpProxyCmd cmd) {
         Settings settings = settingsManager.get();
 
         HttpProxy httpProxy = Settings.HttpProxy.builder()
-                .ip(setting.ip())
-                .port(setting.port())
+                .ip(cmd.ip())
+                .port(cmd.port())
                 .build();
 
         settings.setHttpProxy(httpProxy);
@@ -63,13 +60,13 @@ public class SettingsServiceImpl implements ISettingsService {
     }
 
     @Override
-    public void setSonarr(SetSonarr setting) {
+    public void setSonarr(SetSonarrCmd cmd) {
         Settings settings = settingsManager.get();
 
         Sonarr sonarr = Settings.Sonarr.builder()
-                .url(setting.url())
-                .apiKey(setting.apiKey())
-                .syncSeconds(setting.syncSeconds())
+                .url(cmd.url())
+                .apiKey(cmd.apiKey())
+                .syncSeconds(cmd.syncSeconds())
                 .build();
 
         settings.setSonarr(sonarr);
@@ -77,13 +74,13 @@ public class SettingsServiceImpl implements ISettingsService {
     }
 
     @Override
-    public void setQbittorrent(SetQbittorrent setting) {
+    public void setQbittorrent(SetQbittorrentCmd cmd) {
         Settings settings = settingsManager.get();
 
         QBitTorrent qBitTorrent = Settings.QBitTorrent.builder()
-                .url(setting.url())
-                .username(setting.username())
-                .password(setting.password())
+                .url(cmd.url())
+                .username(cmd.username())
+                .password(cmd.password())
                 .build();
 
         settings.setQbittorrent(qBitTorrent);
@@ -105,12 +102,12 @@ public class SettingsServiceImpl implements ISettingsService {
     }
 
     @Override
-    public void setTheMovieDb(SetTheMovieDb setting) {
+    public void setTheMovieDb(SetTheMovieDbCmd cmd) {
         Settings settings = settingsManager.get();
 
         TheMovieDb theMovieDb = Settings.TheMovieDb.builder()
-                .apiKey(setting.apiKey())
-                .useProxy(setting.useProxy())
+                .apiKey(cmd.apiKey())
+                .useProxy(cmd.useProxy())
                 .build();
 
         settings.setTheMovieDb(theMovieDb);

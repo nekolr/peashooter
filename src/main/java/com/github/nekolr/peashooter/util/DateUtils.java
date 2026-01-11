@@ -16,8 +16,8 @@ public class DateUtils {
         return calendar.getTime();
     }
 
-    public static Date parse(String datetime) {
-        LocalDateTime l = LocalDateTime.parse(datetime, DateTimeFormatter.ISO_DATE_TIME);
+    public static Date parse(String datetime, DateTimeFormatter dateTimeFormatter) {
+        LocalDateTime l = LocalDateTime.parse(datetime, dateTimeFormatter);
         return Date.from(l.atZone(ZoneId.systemDefault()).toInstant());
     }
 

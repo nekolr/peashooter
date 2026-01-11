@@ -1,14 +1,24 @@
 package com.github.nekolr.peashooter.service;
 
-import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
-import com.github.nekolr.peashooter.controller.response.auth.LoginUserVo;
-import com.github.nekolr.peashooter.controller.response.auth.UserInfo;
+import com.github.nekolr.peashooter.controller.cmd.auth.LoginCmd;
+import com.github.nekolr.peashooter.controller.vo.auth.LoginVo;
+import com.github.nekolr.peashooter.controller.vo.auth.UserInfoVo;
+import com.github.nekolr.peashooter.dto.UserInfoDto;
 
 public interface IUserService {
 
-    LoginUser findByUsername(String username);
+    /**
+     * 根据用户名查询用户信息
+     */
+    UserInfoDto findByUsername(String username);
 
-    LoginUserVo login(LoginUser loginUser);
+    /**
+     * 登录
+     */
+    LoginVo login(LoginCmd cmd);
 
-    UserInfo userinfo();
+    /**
+     * 获取当前用户信息
+     */
+    UserInfoVo currentUserInfo();
 }

@@ -1,30 +1,47 @@
 package com.github.nekolr.peashooter.service;
 
-import com.github.nekolr.peashooter.controller.request.group.SaveGroup;
-import com.github.nekolr.peashooter.controller.request.group.GetGroupList;
-import com.github.nekolr.peashooter.entity.domain.Group;
+import com.github.nekolr.peashooter.controller.cmd.group.SaveGroupCmd;
+import com.github.nekolr.peashooter.controller.cmd.group.GetGroupListCmd;
+import com.github.nekolr.peashooter.controller.vo.group.GroupVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 public interface IGroupService {
 
-    List<Group> findAll();
-
+    /**
+     * 删除分组
+     */
     void removeById(Long id);
 
-    Group getById(Long id);
+    /**
+     * 获取分组
+     */
+    GroupVo getById(Long id);
 
-    Group save(Group group);
+    /**
+     * 获取分组列表，带分页
+     */
+    Page<GroupVo> findAllByPage(GetGroupListCmd cmd, Pageable pageable);
 
-    Page<Group> findAllByPage(GetGroupList cmd, Pageable pageable);
+    /**
+     * 保存分组
+     */
+    void saveGroup(SaveGroupCmd saveGroupCmd);
 
-    void saveGroup(SaveGroup saveGroup);
+    /**
+     * 刷新分组的 rss 文件
+     */
+    void refreshRss(Long id);
 
-    void refreshRss(Long groupId);
-
+    /**
+     * 获取分组的 rss 文件
+     */
     String getRss(String filename);
 
+    /**
+     * 获取全部分组的 rss 文件
+     */
     String getAllRss();
+
+
 }

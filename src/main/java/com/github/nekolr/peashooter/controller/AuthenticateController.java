@@ -1,9 +1,9 @@
 package com.github.nekolr.peashooter.controller;
 
-import com.github.nekolr.peashooter.controller.response.auth.UserInfo;
-import com.github.nekolr.peashooter.entity.dto.JsonBean;
-import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
-import com.github.nekolr.peashooter.controller.response.auth.LoginUserVo;
+import com.github.nekolr.peashooter.controller.vo.auth.UserInfoVo;
+import com.github.nekolr.peashooter.dto.JsonBean;
+import com.github.nekolr.peashooter.controller.cmd.auth.LoginCmd;
+import com.github.nekolr.peashooter.controller.vo.auth.LoginVo;
 import com.github.nekolr.peashooter.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +16,13 @@ public class AuthenticateController {
     private final IUserService userService;
 
     @PostMapping("/login")
-    public JsonBean<LoginUserVo> login(@RequestBody LoginUser loginUser) {
-        return JsonBean.ok(userService.login(loginUser));
+    public JsonBean<LoginVo> login(@RequestBody LoginCmd cmd) {
+        return JsonBean.ok(userService.login(cmd));
     }
 
     @GetMapping("userinfo")
-    public JsonBean<UserInfo> userinfo() {
-        return JsonBean.ok(userService.userinfo());
+    public JsonBean<UserInfoVo> currentUserInfo() {
+        return JsonBean.ok(userService.currentUserInfo());
     }
 
 }

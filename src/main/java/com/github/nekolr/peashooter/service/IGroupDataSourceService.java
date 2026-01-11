@@ -8,8 +8,6 @@ public interface IGroupDataSourceService {
 
     void removeById(Long id);
 
-    GroupDataSource getById(Long id);
-
     GroupDataSource save(GroupDataSource groupDataSource);
 
     List<GroupDataSource> getByGroupId(Long groupId);

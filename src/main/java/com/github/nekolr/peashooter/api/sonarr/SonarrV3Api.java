@@ -1,12 +1,12 @@
 package com.github.nekolr.peashooter.api.sonarr;
 
 
-import com.github.nekolr.peashooter.api.sonarr.req.AddNotification;
-import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Notification;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
+import com.github.nekolr.peashooter.api.sonarr.request.AddWebhookNotification;
+import com.github.nekolr.peashooter.api.sonarr.request.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.response.Notification;
+import com.github.nekolr.peashooter.api.sonarr.response.Queue;
+import com.github.nekolr.peashooter.api.sonarr.response.Series;
+import com.github.nekolr.peashooter.api.sonarr.response.Status;
 
 import java.util.List;
 
@@ -28,17 +28,38 @@ public interface SonarrV3Api {
 
     String GET_NOTIFICATION_URI = "/api/v3/notification";
 
+    /**
+     * 获取队列
+     */
     List<Queue> getQueueList();
 
+    /**
+     * 添加 rss 索引器
+     */
     Boolean addRssIndexer(AddRssIndexer indexer);
 
+    /**
+     * 获取所有的通知
+     */
     List<Notification> getNotifications();
 
-    void addNotification(AddNotification notification);
+    /**
+     * 添加 webhook 通知
+     */
+    void addWebhookNotification(AddWebhookNotification notification);
 
+    /**
+     * 获取 sonarr 状态
+     */
     Status getStatus();
 
+    /**
+     * 获取剧集列表
+     */
     List<Series> getSeriesList();
 
+    /**
+     * 获取剧集
+     */
     Series getSeries(String id);
 }

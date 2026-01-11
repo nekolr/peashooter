@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.controller;
 
-import com.github.nekolr.peashooter.entity.dto.JsonBean;
-import com.github.nekolr.peashooter.entity.dto.SeriesNameDto;
+import com.github.nekolr.peashooter.dto.JsonBean;
+import com.github.nekolr.peashooter.dto.SeriesNameDto;
 import com.github.nekolr.peashooter.service.ISonarrService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,22 +18,34 @@ public class SonarrController {
 
     private final ISonarrService sonarrService;
 
-    @GetMapping("series")
-    public JsonBean<List<SeriesNameDto>> series() {
+    /**
+     * 获取所有的剧集名称，按照剧集 id 排序
+     */
+    @GetMapping("seriesNameList")
+    public JsonBean<List<SeriesNameDto>> seriesNameList() {
         return JsonBean.ok(sonarrService.getSeriesNameList());
     }
 
-    @GetMapping("refresh-series")
-    public JsonBean<List<SeriesNameDto>> refreshSeries() {
-        return JsonBean.ok(sonarrService.refreshSeriesName());
+    /**
+     * 刷新所有的剧集名称
+     */
+    @GetMapping("refreshSeriesNameList")
+    public JsonBean<List<SeriesNameDto>> refreshSeriesNameList() {
+        return JsonBean.ok(sonarrService.refreshSeriesNameList());
     }
 
-    @GetMapping("sync-series-latest")
-    public JsonBean<Void> syncSeriesLatest() {
-        sonarrService.syncSeriesLatest();
+    /**
+     * 重新同步剧集名称
+     */
+    @GetMapping("syncSeriesNameList")
+    public JsonBean<Void> syncSeriesNameList() {
+        sonarrService.syncSeriesNameList();
         return JsonBean.ok();
     }
 
+    /**
+     * 设置索引器（订阅地址为所有分组的 rss 文件地址）
+     */
     @PostMapping("setupAllGroupIndexer")
     public JsonBean<Boolean> setupAllGroupIndexer() {
         return JsonBean.ok(sonarrService.setupAllGroupIndexer());

@@ -6,6 +6,7 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import org.jdom2.Element;
 import org.springframework.stereotype.Component;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Component
@@ -20,6 +21,6 @@ public class MiKanPubDateResolver implements PubDateResolver {
     public Date resolver(SyndEntry entry) {
         Element element = FeedUtils.getForeignMarkup(entry, "torrent");
         String pubDateStr = FeedUtils.getChildValue(element, "pubDate");
-        return DateUtils.parse(pubDateStr);
+        return DateUtils.parse(pubDateStr, DateTimeFormatter.ISO_DATE_TIME);
     }
 }

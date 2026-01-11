@@ -14,17 +14,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class GroupDataSourceServiceImpl implements IGroupDataSourceService {
+
     private final GroupDataSourceRepository groupDataSourceRepository;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeById(Long id) {
         groupDataSourceRepository.deleteById(id);
-    }
-
-    @Override
-    public GroupDataSource getById(Long id) {
-        return groupDataSourceRepository.findById(id).orElse(null);
     }
 
     @Override

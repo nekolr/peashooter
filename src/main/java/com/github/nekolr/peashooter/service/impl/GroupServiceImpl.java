@@ -1,8 +1,9 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.config.SettingsManager;
-import com.github.nekolr.peashooter.controller.request.group.SaveGroup;
-import com.github.nekolr.peashooter.controller.request.group.GetGroupList;
+import com.github.nekolr.peashooter.controller.cmd.group.SaveGroupCmd;
+import com.github.nekolr.peashooter.controller.cmd.group.GetGroupListCmd;
+import com.github.nekolr.peashooter.controller.vo.group.GroupVo;
 import com.github.nekolr.peashooter.entity.domain.Group;
 import com.github.nekolr.peashooter.entity.domain.GroupDataSource;
 import com.github.nekolr.peashooter.entity.mapper.GroupMapper;
@@ -54,12 +55,6 @@ public class GroupServiceImpl implements IGroupService {
     private final IGroupDataSourceService gdService;
 
     @Override
-    @Cacheable(key = "'all'")
-    public List<Group> findAll() {
-        return groupRepository.findAll();
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     public void removeById(Long id) {
@@ -70,30 +65,24 @@ public class GroupServiceImpl implements IGroupService {
 
     @Override
     @Cacheable(key = "#p0")
-    public Group getById(Long id) {
+    public GroupVo getById(Long id) {
         Group group = groupRepository.findById(id).orElse(null);
         if (Objects.isNull(group)) {
             throw new RuntimeException("group not found, id: " + id);
         }
+
         List<GroupDataSource> gdList = gdService.getByGroupId(group.getId());
         List<Long> dsList = gdList.stream().map(GroupDataSource::getDatasourceId).toList();
-        group.setDataSourceIds(dsList.toArray(new Long[0]));
-        group.setMatchers(JacksonUtils.tryParse(() ->
+        GroupVo groupVo = groupMapper.toVo(group);
+        groupVo.setDataSourceIds(dsList.toArray(new Long[0]));
+        groupVo.setMatchers(JacksonUtils.tryParse(() ->
                 JacksonUtils.getObjectMapper().readValue(group.getMatchersJson(),
-                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Matcher.class))));
-        return group;
+                        JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Matcher.class))));
+        return groupVo;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0.id", condition = "#p0.id != null")})
-    public Group save(Group group) {
-        group.setUpdateTime(new Date());
-        return groupRepository.save(group);
-    }
-
-    @Override
-    public Page<Group> findAllByPage(GetGroupList cmd, Pageable pageable) {
+    public Page<GroupVo> findAllByPage(GetGroupListCmd cmd, Pageable pageable) {
         Group group = new Group();
         String groupName = cmd.groupName();
         if (StringUtils.hasText(groupName)) {
@@ -104,29 +93,37 @@ public class GroupServiceImpl implements IGroupService {
                 .withMatcher("name", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
         Page<Group> page = groupRepository.findAll(Example.of(group, matcher), pageable);
         List<Group> list = page.getContent();
-        list.forEach(e -> e.setRssLink(getGroupRssFileUrl(settingsManager.get().getBasic().getMappingUrl(), e.getId())));
 
-        return page;
+        String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+        List<GroupVo> voList = list.stream().map(e -> {
+            GroupVo vo = groupMapper.toVo(e);
+            vo.setRssLink(getGroupRssFileUrl(mappingUrl, e.getId()));
+            return vo;
+        }).toList();
+
+        return new org.springframework.data.domain.PageImpl<>(voList, pageable, page.getTotalElements());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0.id", condition = "#p0.id != null")})
-    public void saveGroup(SaveGroup saveGroup) {
-        Group group = groupMapper.toDomain(saveGroup);
+    public void saveGroup(SaveGroupCmd saveGroupCmd) {
+        Group group = groupMapper.toDomain(saveGroupCmd);
 
-        if (!CollectionUtils.isEmpty(saveGroup.matchers())) {
+        if (!CollectionUtils.isEmpty(saveGroupCmd.matchers())) {
             group.setMatchersJson(JacksonUtils.tryParse(() ->
-                JacksonUtils.getObjectMapper().writeValueAsString(saveGroup.matchers())));
+                    JacksonUtils.getObjectMapper().writeValueAsString(saveGroupCmd.matchers())));
         }
-        this.save(group);
+
+        group.setUpdateTime(new Date());
+        groupRepository.save(group);
 
         if (Objects.nonNull(group.getId())) {
             List<GroupDataSource> needDelList = gdService.getByGroupId(group.getId());
             gdService.deleteList(needDelList);
         }
 
-        Long[] dataSourceIds = saveGroup.dataSourceIds();
+        Long[] dataSourceIds = saveGroupCmd.dataSourceIds();
         if (Objects.nonNull(dataSourceIds) && dataSourceIds.length > 0) {
             Arrays.stream(dataSourceIds).forEach(id -> {
                 GroupDataSource groupDataSource = new GroupDataSource();
@@ -139,14 +136,14 @@ public class GroupServiceImpl implements IGroupService {
     }
 
     @Override
-    public void refreshRss(Long groupId) {
-        Group group = this.groupRepository.findById(groupId).orElse(null);
+    public void refreshRss(Long id) {
+        Group group = this.groupRepository.findById(id).orElse(null);
         if (Objects.isNull(group)) {
             return;
         }
         List<Matcher> matchers = JacksonUtils.tryParse(() ->
                 JacksonUtils.getObjectMapper().readValue(group.getMatchersJson(),
-                    JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Matcher.class)));
+                        JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Matcher.class)));
 
         List<Item> items = new ArrayList<>();
         ConvertContext convertContext = ConvertContext.builder()
@@ -157,8 +154,8 @@ public class GroupServiceImpl implements IGroupService {
                 .matchers(matchers)
                 .build();
 
-        List<GroupDataSource> referenceDataSources = gdService.getByGroupId(group.getId());
-        for (GroupDataSource ds : referenceDataSources) {
+        List<GroupDataSource> groupDataSources = gdService.getByGroupId(group.getId());
+        for (GroupDataSource ds : groupDataSources) {
             String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(ds.getDatasourceId()));
             SyndFeed syndFeed = FeedUtils.getFeed(rss);
             List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
@@ -205,12 +202,15 @@ public class GroupServiceImpl implements IGroupService {
         SyndFeed syndFeed = FeedUtils.createFeed();
         FeedUtils.setFeedType(syndFeed, RSS_2_0);
         FeedUtils.setTitle(syndFeed, RSS_TITLE);
-        FeedUtils.setLink(syndFeed, getAllGroupLink(mappingUrl));
+        FeedUtils.setLink(syndFeed, getAllGroupRssFileUrl(mappingUrl));
         FeedUtils.setDescription(syndFeed, RSS_DESCRIPTION);
         FeedUtils.setEntries(syndFeed, entryList);
         return FeedUtils.writeString(syndFeed);
     }
 
+    /**
+     * 按照发布时间去重，保留最新发布的
+     */
     private List<SyndEntry> distinctByPubDate(List<SyndEntry> entryList) {
         Map<String, SyndEntry> dictionary = new LinkedHashMap<>();
         for (SyndEntry entry : entryList) {
@@ -227,6 +227,9 @@ public class GroupServiceImpl implements IGroupService {
         return new ArrayList<>(dictionary.values());
     }
 
+    /**
+     * 按照元素顺序去重，保留靠前的
+     */
     private List<SyndEntry> distinctByOrderAsc(List<SyndEntry> entryList) {
         Map<String, SyndEntry> dictionary = new LinkedHashMap<>();
         for (SyndEntry entry : entryList) {

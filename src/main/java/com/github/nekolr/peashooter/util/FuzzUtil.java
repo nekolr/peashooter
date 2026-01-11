@@ -17,9 +17,6 @@ public class FuzzUtil {
         if (str1 == null || str2 == null) {
             return false;
         }
-        if (FuzzySearch.ratio(str1, str2) >= SIMILARITY_THRESHOLD) {
-            return true;
-        }
-        return false;
+        return FuzzySearch.ratio(str1, str2) >= SIMILARITY_THRESHOLD;
     }
 }

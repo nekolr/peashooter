@@ -23,12 +23,11 @@ public abstract class AbstractJobManager {
                 .simpleSchedule()
                 .repeatForever()
                 .withIntervalInSeconds(intervalSeconds);
-        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+        return TriggerBuilder.newTrigger()
                 .withIdentity(this.getTriggerKey(key))
                 .startAt(startDate)
                 .withSchedule(scheduleBuilder)
                 .build();
-        return trigger;
     }
 
     protected SimpleTrigger createTrigger(String key, int intervalSeconds) {
@@ -36,12 +35,11 @@ public abstract class AbstractJobManager {
                 .simpleSchedule()
                 .repeatForever()
                 .withIntervalInSeconds(intervalSeconds);
-        SimpleTrigger trigger = TriggerBuilder.newTrigger()
+        return TriggerBuilder.newTrigger()
                 .withIdentity(this.getTriggerKey(key))
                 .startNow()
                 .withSchedule(scheduleBuilder)
                 .build();
-        return trigger;
     }
 
     protected void schedule(JobDetail job, Trigger trigger) {

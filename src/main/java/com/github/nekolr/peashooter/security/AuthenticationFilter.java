@@ -2,8 +2,8 @@ package com.github.nekolr.peashooter.security;
 
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.config.UserSettings;
-import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
-import com.github.nekolr.peashooter.entity.dto.JsonBean;
+import com.github.nekolr.peashooter.dto.JsonBean;
+import com.github.nekolr.peashooter.dto.UserInfoDto;
 import com.github.nekolr.peashooter.service.IUserService;
 import com.github.nekolr.peashooter.util.JacksonUtils;
 import io.jsonwebtoken.Claims;
@@ -100,9 +100,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         String apiKey = request.getParameter(API_KEY_PARAM);
         if (settingsManager.validApiKey(apiKey)) {
-            LoginUser loginUser = userService.findByUsername(userSettings.getUsername());
+            UserInfoDto userInfoDto = userService.findByUsername(userSettings.getUsername());
             // 使用 ScopedValue 在整个过滤器链执行期间绑定用户信息
-            contextHolder.runWithUsername(loginUser.getUsername(), () -> {
+            contextHolder.runWithUsername(userInfoDto.username(), () -> {
                 try {
                     chain.doFilter(request, response);
                 } catch (IOException | ServletException e) {
@@ -120,10 +120,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             String username = claims.getSubject();
             // 只有在没有当前用户时才会放入
             if (Objects.isNull(contextHolder.getCurrUsername())) {
-                LoginUser loginUser = userService.findByUsername(username);
-                if (Objects.nonNull(loginUser)) {
+                UserInfoDto userInfoDto = userService.findByUsername(username);
+                if (Objects.nonNull(userInfoDto)) {
                     // 使用 ScopedValue 在整个过滤器链执行期间绑定用户信息
-                    contextHolder.runWithUsername(loginUser.getUsername(), () -> {
+                    contextHolder.runWithUsername(userInfoDto.username(), () -> {
                         try {
                             chain.doFilter(request, response);
                         } catch (IOException | ServletException e) {

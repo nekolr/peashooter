@@ -1,8 +1,8 @@
 package com.github.nekolr.peashooter.api.qb.client;
 
 import com.github.nekolr.peashooter.api.qb.QBittorrentApi;
-import com.github.nekolr.peashooter.api.qb.rsp.AppVersion;
-import com.github.nekolr.peashooter.api.qb.rsp.SID;
+import com.github.nekolr.peashooter.api.qb.response.AppVersion;
+import com.github.nekolr.peashooter.api.qb.response.SID;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

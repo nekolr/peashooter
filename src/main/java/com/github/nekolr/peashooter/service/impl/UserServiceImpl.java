@@ -1,9 +1,10 @@
 package com.github.nekolr.peashooter.service.impl;
 
 import com.github.nekolr.peashooter.config.UserSettings;
-import com.github.nekolr.peashooter.controller.request.auth.LoginUser;
-import com.github.nekolr.peashooter.controller.response.auth.LoginUserVo;
-import com.github.nekolr.peashooter.controller.response.auth.UserInfo;
+import com.github.nekolr.peashooter.controller.cmd.auth.LoginCmd;
+import com.github.nekolr.peashooter.controller.vo.auth.LoginVo;
+import com.github.nekolr.peashooter.controller.vo.auth.UserInfoVo;
+import com.github.nekolr.peashooter.dto.UserInfoDto;
 import com.github.nekolr.peashooter.security.ContextHolder;
 import com.github.nekolr.peashooter.security.TokenProvider;
 import com.github.nekolr.peashooter.service.IUserService;
@@ -21,29 +22,30 @@ public class UserServiceImpl implements IUserService {
     private final ContextHolder contextHolder;
 
     @Override
-    public LoginUser findByUsername(String username) {
+    public UserInfoDto findByUsername(String username) {
         if (userSettings.getUsername().equals(username)) {
-            return new LoginUser(userSettings.getUsername(), userSettings.getPassword());
+            return new UserInfoDto(userSettings.getUsername(), userSettings.getPassword());
         }
         return null;
     }
 
     @Override
-    public LoginUserVo login(LoginUser loginUser) {
-        LoginUser entity = findByUsername(loginUser.getUsername());
-        if (Objects.isNull(entity) || !loginUser.getPassword().equals(entity.getPassword())) {
+    public LoginVo login(LoginCmd cmd) {
+        UserInfoDto userInfoDto = findByUsername(cmd.getUsername());
+        if (Objects.isNull(userInfoDto) || !cmd.getPassword().equals(userInfoDto.password())) {
             throw new RuntimeException("无效的用户名或密码");
         }
-        String token = tokenProvider.createToken(loginUser.getUsername());
-        return new LoginUserVo(token, loginUser);
+        String token = tokenProvider.createToken(cmd.getUsername());
+        UserInfoVo userInfoVo = new UserInfoVo(cmd.getUsername());
+        return new LoginVo(token, userInfoVo);
     }
 
     @Override
-    public UserInfo userinfo() {
+    public UserInfoVo currentUserInfo() {
         String username = contextHolder.getCurrUsername();
         if (Objects.isNull(username)) {
             throw new RuntimeException("用户未登录");
         }
-        return new UserInfo(username);
+        return new UserInfoVo(username);
     }
 }

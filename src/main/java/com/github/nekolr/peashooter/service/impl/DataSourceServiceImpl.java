@@ -1,16 +1,17 @@
 package com.github.nekolr.peashooter.service.impl;
 
-import com.github.nekolr.peashooter.controller.request.datasource.GetDataSourceList;
-import com.github.nekolr.peashooter.controller.request.datasource.TestRegexp;
-import com.github.nekolr.peashooter.controller.response.datasource.ItemTitle;
-import com.github.nekolr.peashooter.controller.response.datasource.MatchResult;
+import com.github.nekolr.peashooter.controller.cmd.datasource.GetDataSourceListCmd;
+import com.github.nekolr.peashooter.controller.cmd.datasource.TestRegexpCmd;
+import com.github.nekolr.peashooter.controller.vo.datasource.ItemTitleVo;
+import com.github.nekolr.peashooter.controller.vo.datasource.MatchResultVo;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
-import com.github.nekolr.peashooter.job.datasource.RssRefreshJobManager;
+import com.github.nekolr.peashooter.job.datasource.DataSourceRssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
 import com.github.nekolr.peashooter.rss.convertor.Matcher;
 import com.github.nekolr.peashooter.rss.loader.RssLoader;
 import com.github.nekolr.peashooter.rss.writer.RssWriter;
 import com.github.nekolr.peashooter.service.IDataSourceService;
+import com.github.nekolr.peashooter.util.EpisodeTitleUtil;
 import com.github.nekolr.peashooter.util.FeedUtils;
 import com.github.nekolr.peashooter.util.FillUpZeroUtil;
 import com.github.nekolr.peashooter.util.Md5Util;
@@ -27,8 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.text.Format;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -43,7 +42,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
 
     private final RssWriter rssWriter;
     private final RssLoader rssLoader;
-    private final RssRefreshJobManager jobManager;
+    private final DataSourceRssRefreshJobManager jobManager;
     private final DataSourceRepository dataSourceRepository;
 
     @Override
@@ -64,12 +63,6 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
-    @Cacheable(key = "#p0")
-    public DataSource getById(Long id) {
-        return dataSourceRepository.findById(id).orElse(null);
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(key = "'all'")
     public DataSource save(DataSource dataSource) {
@@ -82,7 +75,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
-    public Page<DataSource> findAllByPage(GetDataSourceList cmd, Pageable pageable) {
+    public Page<DataSource> findAllByPage(GetDataSourceListCmd cmd, Pageable pageable) {
         DataSource dataSource = new DataSource();
         String dataSourceName = cmd.dataSourceName();
         if (StringUtils.hasText(dataSourceName)) {
@@ -115,7 +108,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     }
 
     @Override
-    public List<ItemTitle> getItemTitleList(Long id, String title) {
+    public List<ItemTitleVo> getItemTitleList(Long id, String title) {
         DataSource dataSource = dataSourceRepository.findById(id).orElse(null);
         if (Objects.isNull(dataSource)) {
             return Collections.emptyList();
@@ -123,48 +116,52 @@ public class DataSourceServiceImpl implements IDataSourceService {
             String xml = rssLoader.loadFromFile(getDatasourceRssFilepath(id));
             SyndFeed feed = FeedUtils.getFeed(xml);
             List<SyndEntry> entries = FeedUtils.getEntries(feed);
-            List<ItemTitle> result = new ArrayList<>(entries.size());
-            boolean findTitle = StringUtils.hasText(title);
+            List<ItemTitleVo> result = new ArrayList<>(entries.size());
+            boolean findTitle = StringUtils.hasText(title); // 是否要查找标题
             int idx = 0;
             for (SyndEntry entry : entries) {
                 String seriesTitle = FeedUtils.getTitle(entry);
-                if (!findTitle) {
-                    result.add(new ItemTitle(++idx, seriesTitle));
-                } else if (seriesTitle.contains(title)) {
-                    result.add(new ItemTitle(++idx, seriesTitle));
+                if (Objects.nonNull(seriesTitle)) {
+                    if (!findTitle) {
+                        result.add(new ItemTitleVo(++idx, seriesTitle));
+                    } else {
+                        if (seriesTitle.contains(title)) {
+                            result.add(new ItemTitleVo(++idx, seriesTitle));
+                        }
+                    }
                 }
             }
             return result;
         }
     }
 
+
     @Override
-    public List<MatchResult> testRegexp(TestRegexp cmd) {
-        List<ItemTitle> itemTitles = new ArrayList<>(0);
+    public List<MatchResultVo> testRegexp(TestRegexpCmd cmd) {
+        List<ItemTitleVo> itemTitleVos = new ArrayList<>(0);
         if (Objects.nonNull(cmd.dataSourceIds()) && cmd.dataSourceIds().length > 0) {
-            Stream<ItemTitle> stream = Arrays.stream(cmd.dataSourceIds())
-                    .flatMap(id -> this.getItemTitleList(Long.valueOf(id), null).stream());
-            itemTitles = stream.toList();
+            Stream<ItemTitleVo> stream = Arrays.stream(cmd.dataSourceIds())
+                    .flatMap(id -> getItemTitleList(Long.valueOf(id), null).stream());
+            itemTitleVos = stream.toList();
         }
         int count = 0;
         Matcher matcher = cmd.matcher();
         Integer season = matcher.season();
         Integer episodeOffset = matcher.episodeOffset();
         Pattern pattern = Pattern.compile(matcher.regexp());
-        List<MatchResult> matchResultList = new ArrayList<>();
-        for (ItemTitle itemTitle : itemTitles) {
-            java.util.regex.Matcher m = pattern.matcher(itemTitle.title());
+        List<MatchResultVo> matchResultVoList = new ArrayList<>();
+        for (ItemTitleVo itemTitleVo : itemTitleVos) {
+            java.util.regex.Matcher m = pattern.matcher(itemTitleVo.title());
             if (m.find(matcher.offset())) {
-                String episodeNum = m.group(EPISODE_NUM_GROUP_NAME);
-                int adjustedEpisodeNum = Integer.parseInt(episodeNum) + (episodeOffset != null ? episodeOffset : 0);
-                String epNum = FillUpZeroUtil.fill(String.valueOf(adjustedEpisodeNum));
-                String epTitle = EPISODE_TITLE_PREFIX + epNum;
-                Format format = new MessageFormat(EPISODE_TITLE_TEMPLATE);
-                Object[] args = new Object[]{cmd.series(), season, epNum, epTitle, cmd.language(), cmd.quality()};
-                String newTitle = format.format(args);
-                matchResultList.add(new MatchResult(++count, itemTitle.title(), newTitle, epNum));
+                String episodeNumStr = m.group(EPISODE_NUM_GROUP_NAME);
+                // 校正后的集数
+                int adjustedEpisodeNum = Integer.parseInt(episodeNumStr) + (episodeOffset != null ? episodeOffset : 0);
+                String episodeNum = FillUpZeroUtil.fill(String.valueOf(adjustedEpisodeNum));
+                // 格式化后的集标题
+                String newTitle = EpisodeTitleUtil.formatEpisodeTitle(cmd.seriesTitle(), season, episodeNum, cmd.language(), cmd.quality());
+                matchResultVoList.add(new MatchResultVo(++count, itemTitleVo.title(), newTitle, episodeNum));
             }
         }
-        return matchResultList;
+        return matchResultVoList;
     }
 }

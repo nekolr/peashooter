@@ -1,8 +1,8 @@
 package com.github.nekolr.peashooter.api.themoviedb.client;
 
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindAliasTitle;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
+import com.github.nekolr.peashooter.api.themoviedb.response.FindAliasTitle;
+import com.github.nekolr.peashooter.api.themoviedb.response.FindById;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.util.JacksonUtils;
 import lombok.RequiredArgsConstructor;

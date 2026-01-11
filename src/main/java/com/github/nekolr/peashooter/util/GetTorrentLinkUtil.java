@@ -20,7 +20,7 @@ public class GetTorrentLinkUtil {
                     TORRENTS_URI +
                     "?url=" + url +
                     "&title=" + title +
-                    "&episode=" + episode +
+                    "&episodeNum=" + episode +
                     "&season=" + season +
                     "&series=" + seriesId;
         } catch (UnsupportedEncodingException e) {

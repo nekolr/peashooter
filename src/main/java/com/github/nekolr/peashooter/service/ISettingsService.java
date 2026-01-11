@@ -1,25 +1,52 @@
 package com.github.nekolr.peashooter.service;
 
 import com.github.nekolr.peashooter.config.Settings;
-import com.github.nekolr.peashooter.controller.request.settings.*;
+import com.github.nekolr.peashooter.controller.cmd.settings.*;
 
 public interface ISettingsService {
 
+    /**
+     * 测试 sonarr
+     */
     boolean testSonarr();
 
+    /**
+     * 测试 qBittorrent
+     */
     boolean testQb();
 
-    void setBasic(SetBasic setting);
+    /**
+     * 设置基本属性
+     */
+    void setBasic(SetBasicCmd cmd);
 
-    void setProxy(SetHttpProxy setting);
+    /**
+     * 设置代理
+     */
+    void setProxy(SetHttpProxyCmd cmd);
 
-    void setSonarr(SetSonarr setting);
+    /**
+     * 设置 sonarr
+     */
+    void setSonarr(SetSonarrCmd cmd);
 
-    void setQbittorrent(SetQbittorrent setting);
+    /**
+     * 设置 qBittorrent
+     */
+    void setQbittorrent(SetQbittorrentCmd cmd);
 
+    /**
+     * 刷新 apiKey
+     */
     String refreshApiKey();
 
+    /**
+     * 获取全部配置
+     */
     Settings get();
 
-    void setTheMovieDb(SetTheMovieDb setting);
+    /**
+     * 设置 themoviedb
+     */
+    void setTheMovieDb(SetTheMovieDbCmd cmd);
 }

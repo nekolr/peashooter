@@ -31,8 +31,8 @@ public class SettingsInitializer implements InitializingBean {
     }
 
     private void initRssDir() throws IOException {
-        createDirIfNotExists(ORIGINAL_RSS_FILE_DIR);
-        createDirIfNotExists(CONVERTED_RSS_FILE_DIR);
+        createDirIfNotExists(DATASOURCE_RSS_FILE_DIR);
+        createDirIfNotExists(GROUP_RSS_FILE_DIR);
     }
 
     private void initSettings() throws Exception {

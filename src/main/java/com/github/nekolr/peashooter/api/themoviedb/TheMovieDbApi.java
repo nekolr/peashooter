@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.api.themoviedb;
 
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindAliasTitle;
-import com.github.nekolr.peashooter.api.themoviedb.rsp.FindById;
+import com.github.nekolr.peashooter.api.themoviedb.response.FindAliasTitle;
+import com.github.nekolr.peashooter.api.themoviedb.response.FindById;
 
 import java.util.List;
 import java.util.Optional;

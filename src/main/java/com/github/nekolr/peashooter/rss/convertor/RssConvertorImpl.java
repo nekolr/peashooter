@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.rss.convertor;
 
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
+import com.github.nekolr.peashooter.api.sonarr.response.Series;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.rss.Enclosure;
 import com.github.nekolr.peashooter.rss.Item;
@@ -12,6 +12,7 @@ import com.rometools.rome.feed.synd.SyndFeed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -35,11 +36,14 @@ public class RssConvertorImpl implements RssConvertor {
         SyndFeed syndFeed = FeedUtils.createFeed();
         FeedUtils.setFeedType(syndFeed, RSS_2_0);
         FeedUtils.setTitle(syndFeed, RSS_TITLE);
+
         if (Objects.nonNull(groupId)) {
             FeedUtils.setLink(syndFeed, getGroupRssFileUrl(mappingUrl, groupId));
         } else {
+            // 没有分组 id，说明是自动分组
             FeedUtils.setLink(syndFeed, getAutomatedGroupRssFileUrl(mappingUrl));
         }
+
         FeedUtils.setDescription(syndFeed, RSS_DESCRIPTION);
 
         List<SyndEntry> entries = new ArrayList<>(items.size());
@@ -65,27 +69,35 @@ public class RssConvertorImpl implements RssConvertor {
     @Override
     public Item convert(SyndEntry entry, ConvertContext ctx) {
         Item item = null;
-        String epTitle = FeedUtils.getTitle(entry);
+        String episodeTitle = FeedUtils.getTitle(entry);
+
+        if (!StringUtils.hasText(episodeTitle)) {
+            return item;
+        }
+
         List<Matcher> matchers = ctx.matchers();
         Series series = sonarrV3Api.getSeries(ctx.referenceId());
         if (Objects.isNull(series)) {
-            return null;
+            return item;
         }
 
         for (Matcher matcher : matchers) {
             Pattern pattern = Pattern.compile(matcher.regexp());
-            java.util.regex.Matcher m = pattern.matcher(epTitle);
+            java.util.regex.Matcher m = pattern.matcher(episodeTitle);
             if (m.find(matcher.offset())) {
                 String episodeNum = m.group(EPISODE_NUM_GROUP_NAME);
                 if (Objects.nonNull(matcher.episodeOffset())) {
                     episodeNum = String.valueOf(Integer.parseInt(episodeNum) + matcher.episodeOffset());
                 }
 
-                epTitle = EpisodeTitleUtil.formatEpisodeTitle(series.title(), matcher.season(), episodeNum, ctx.quality(), ctx.language());
+                episodeTitle = EpisodeTitleUtil.formatEpisodeTitle(series.title(), matcher.season(), episodeNum, ctx.language(), ctx.quality());
 
                 String link = FeedUtils.getLink(entry);
-                String guid = FeedUtils.getUri(entry);
+                if (!StringUtils.hasText(link)) {
+                    return item;
+                }
 
+                String guid = FeedUtils.getUri(entry);
                 Date pubDate = resolvePubDateUtil.resolvePubDate(entry, link);
 
                 List<SyndEnclosure> enclosures = FeedUtils.getEnclosures(entry);
@@ -93,7 +105,7 @@ public class RssConvertorImpl implements RssConvertor {
                 SyndEnclosure first = enclosures.getFirst();
 
                 Enclosure enclosure = new Enclosure(first.getUrl(), first.getLength(), first.getType());
-                item = new Item(epTitle, link, pubDate, guid, enclosure, series.id(), season, Integer.parseInt(episodeNum), null);
+                item = new Item(episodeTitle, link, pubDate, guid, enclosure, series.id(), season, Integer.parseInt(episodeNum), null);
             }
         }
         return item;

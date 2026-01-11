@@ -18,19 +18,28 @@ import static com.github.nekolr.peashooter.constant.Peashooter.SETTINGS_FILE_NAM
 public class SettingsManager {
     private Settings settings;
 
+    /**
+     * 获取全部配置
+     */
     public Settings get() {
         return settings;
     }
 
+    /**
+     * 更新配置
+     */
     public synchronized void update(Settings settings) {
         this.settings = settings;
         this.dumpFile();
     }
 
+    /**
+     * 写配置文件
+     */
     private void dumpFile() {
         try {
             String prettyJson = JacksonUtils.tryParse(() ->
-                JacksonUtils.getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(settings));
+                    JacksonUtils.getObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(settings));
             Path filepath = Paths.get(SETTINGS_DIR + SETTINGS_FILE_NAME);
             Files.writeString(filepath, prettyJson, StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -39,6 +48,9 @@ public class SettingsManager {
         }
     }
 
+    /**
+     * 验证 apiKey
+     */
     public boolean validApiKey(String apiKey) {
         if (StringUtils.hasText(apiKey)) {
             return apiKey.equals(settings.getBasic().getApiKey());

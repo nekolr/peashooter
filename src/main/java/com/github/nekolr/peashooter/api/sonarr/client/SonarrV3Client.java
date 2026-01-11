@@ -1,12 +1,12 @@
 package com.github.nekolr.peashooter.api.sonarr.client;
 
 import com.github.nekolr.peashooter.api.sonarr.SonarrV3Api;
-import com.github.nekolr.peashooter.api.sonarr.req.AddNotification;
-import com.github.nekolr.peashooter.api.sonarr.req.AddRssIndexer;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Notification;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Queue;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Series;
-import com.github.nekolr.peashooter.api.sonarr.rsp.Status;
+import com.github.nekolr.peashooter.api.sonarr.request.AddWebhookNotification;
+import com.github.nekolr.peashooter.api.sonarr.request.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.response.Notification;
+import com.github.nekolr.peashooter.api.sonarr.response.Queue;
+import com.github.nekolr.peashooter.api.sonarr.response.Series;
+import com.github.nekolr.peashooter.api.sonarr.response.Status;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.util.JacksonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -101,7 +101,7 @@ public class SonarrV3Client implements SonarrV3Api {
     }
 
     @Override
-    public void addNotification(AddNotification notification) {
+    public void addWebhookNotification(AddWebhookNotification notification) {
         String requestBody = JacksonUtils.tryParse(() ->
                 JacksonUtils.getObjectMapper().writeValueAsString(notification));
 
