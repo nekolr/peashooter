@@ -5,7 +5,6 @@ import com.github.nekolr.peashooter.api.sonarr.response.Series;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
 import com.github.nekolr.peashooter.api.themoviedb.response.FindAliasTitle;
 import com.github.nekolr.peashooter.api.themoviedb.response.FindById;
-import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.exception.ParseTitleException;
 import com.github.nekolr.peashooter.parser.RawParser;
 import com.github.nekolr.peashooter.rss.Enclosure;
@@ -22,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +58,6 @@ public class RawParserServiceImpl implements IRawParserService {
     private final SonarrV3Api sonarrV3Api;
     private final RssConvertor rssConvertor;
     private final TheMovieDbApi theMovieDbApi;
-    private final SettingsManager settingsManager;
     private final ResolvePubDateUtil resolvePubDateUtil;
 
     /**
@@ -166,12 +165,12 @@ public class RawParserServiceImpl implements IRawParserService {
 
         if (this.equalsTitle(episode.titleInfo().name(), series.title())) {
             log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.of(this.parseEntry(entry, series, episode));
+            return Optional.ofNullable(this.parseEntry(entry, series, episode));
         }
 
         if (this.similarTitle(episode.titleInfo().name(), series.title())) {
             log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.of(this.parseEntry(entry, series, episode));
+            return Optional.ofNullable(this.parseEntry(entry, series, episode));
         }
 
         List<FindAliasTitle.Title> titleList = this.sonarrIdTitleMap.get(series.id());
@@ -179,12 +178,12 @@ public class RawParserServiceImpl implements IRawParserService {
 
         if (this.equalsTitle(episode.titleInfo().name(), titles)) {
             log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.of(this.parseEntry(entry, series, episode));
+            return Optional.ofNullable(this.parseEntry(entry, series, episode));
         }
 
         if (this.similarTitle(episode.titleInfo().name(), titles)) {
             log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.of(this.parseEntry(entry, series, episode));
+            return Optional.ofNullable(this.parseEntry(entry, series, episode));
         }
 
         return Optional.empty();
@@ -315,12 +314,11 @@ public class RawParserServiceImpl implements IRawParserService {
      * 解析 RSS 条目并转换为 Item 对象
      */
     private Item parseEntry(SyndEntry entry, Series series, RawParser.Episode episode) {
-        String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
 
         int episodeNum = episode.episodeInfo().episode();
         int seasonNum = episode.seasonInfo().season();
 
-        String episodeStr = String.valueOf(episodeNum);
+        String episodeNumStr = String.valueOf(episodeNum);
 
         // 如果不是第一季，则可能需要计算相对集数（区别于绝对集数）
         if (seasonNum > 1) {
@@ -336,25 +334,28 @@ public class RawParserServiceImpl implements IRawParserService {
                 if (episode.episodeInfo().episode() > preEpisodeNumbers) {
                     // 计算相对集数
                     int relativeEpisode = episodeNum - preEpisodeNumbers;
-                    episodeStr = String.valueOf(relativeEpisode);
+                    episodeNumStr = String.valueOf(relativeEpisode);
                     log.info("计算相对集数: {}, 原集数: {}, 计算后集数: {}", series.title(), episodeNum, relativeEpisode);
                 }
             }
         }
 
-        String title = EpisodeTitleUtil.formatEpisodeTitle(series.title(), seasonNum, episodeStr, DEFAULT_LANGUAGE, DEFAULT_QUALITY);
+        String title = EpisodeTitleUtil.formatEpisodeTitle(series.title(), seasonNum, episodeNumStr, DEFAULT_LANGUAGE, DEFAULT_QUALITY);
 
         String link = FeedUtils.getLink(entry);
         String guid = FeedUtils.getUri(entry);
+
+        if (!StringUtils.hasText(link)) {
+            return null;
+        }
 
         Date pubDate = resolvePubDateUtil.resolvePubDate(entry, link);
 
         List<SyndEnclosure> enclosures = FeedUtils.getEnclosures(entry);
         SyndEnclosure first = enclosures.getFirst();
-        String url = GetTorrentLinkUtil.formatLink(mappingUrl, first.getUrl(), title, episodeStr, seasonNum, series.id());
 
-        Enclosure enclosure = new Enclosure(url, first.getLength(), first.getType());
-        return new Item(title, link, pubDate, guid, enclosure, series.id(), seasonNum, Integer.parseInt(episodeStr), episode.source());
+        Enclosure enclosure = new Enclosure(first.getUrl(), first.getLength(), first.getType());
+        return new Item(title, link, pubDate, guid, enclosure, series.id(), seasonNum, Integer.parseInt(episodeNumStr), episode.source());
     }
 
     /**
