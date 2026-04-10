@@ -1,5 +1,6 @@
 package com.github.nekolr.peashooter.parser;
 
+import com.github.nekolr.peashooter.exception.ParseTitleException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,6 +15,7 @@ public class RawParserTests {
     private static final String TITLE6 = "[黒ネズミたち] 被驱逐出勇者队伍的白魔导师，被S级冒险者捡到 / Yuusha Party wo Tsuihou Sareta Shiro Madoushi - 04 (Baha 1920x1080 AVC AAC MP4)";
     private static final String TITLE7 = "[ANi] 我们不可能成为恋人！绝对不行。（※似乎可行？） - 04 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4]";
     private static final String TITLE8 = "[ANi] Grand Blue Dreaming / GRAND BLUE 碧蓝之海 2 - 04 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4]";
+    private static final String TITLE9 = "六四位元字幕组★最强的职业不是勇者也不是贤者好像是鉴定士（暂）的样子 Saikyou no Shokugyou wa Yuusha demo Kenja demo Naku Kanteishi (Kari) Rashii desu yo★02★1920x1080★AVC AAC MP4★繁体中文";
 
     @Test
     void testTitle1() {
@@ -93,5 +95,10 @@ public class RawParserTests {
         assertEquals(1, result.seasonInfo().season()); // 这种情况无法确定是第几季，因此默认为 1
         assertEquals("ANi", result.releaseGroup());
         assertEquals(4, result.episodeInfo().episode());
+    }
+
+    @Test
+    void testTitle9() {
+        assertThrows(ParseTitleException.class, () -> RawParser.parse(TITLE9));
     }
 }

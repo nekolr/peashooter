@@ -91,9 +91,9 @@ public class RawParser {
      */
     private static String preProcess(String title) {
         return title.strip()
-                .replaceAll("【", "[")
-                .replaceAll("】", "]")
-                .replaceAll(INTERFERENCE_REGEX2, "");
+                .replace("【", "[")
+                .replace("】", "]")
+                .replace(INTERFERENCE_REGEX2, "");
     }
 
     /**
@@ -102,7 +102,8 @@ public class RawParser {
      * @param title 包含发布组信息的标题
      */
     private static String findReleaseGroup(String title) {
-        return title.split("[\\[\\]]")[1];
+        String[] parts = title.split("[\\[\\]]");
+        return parts.length > 1 ? parts[1] : null;
     }
 
     /**
@@ -171,6 +172,10 @@ public class RawParser {
 
         // 移除空字符串
         splitNames = removeBlank(splitNames);
+
+        if (splitNames.length == 0) {
+            return new Name(rawName, splitNames);
+        }
 
         if (splitNames.length == 1) {
             if (rawName.contains("_")) {
@@ -345,7 +350,8 @@ public class RawParser {
     /**
      * 番剧解析结果
      */
-    public record Episode(EpisodeInfo episodeInfo, TitleInfo titleInfo, SeasonInfo seasonInfo, String releaseGroup, String resolution, String source, String subtitle) {
+    public record Episode(EpisodeInfo episodeInfo, TitleInfo titleInfo, SeasonInfo seasonInfo, String releaseGroup,
+                          String resolution, String source, String subtitle) {
 
     }
 
