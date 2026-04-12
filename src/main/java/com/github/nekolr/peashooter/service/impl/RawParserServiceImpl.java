@@ -43,7 +43,7 @@ public class RawParserServiceImpl implements IRawParserService {
 
     private static final String DEFAULT_LANGUAGE = "Chinese";
     private static final String DEFAULT_QUALITY = "WEBDL-1080p";
-    private static final List<String> EXCLUDE_SOURCES = List.of("CR", "BILIBILI"); // 排除的源
+    private static final List<String> EXCLUDE_SOURCES = List.of("CR", "BILIBILI", "ABEMA"); // 排除的源
     private static final Map<String, Integer> SOURCE_WEIGHT_MAP = Map.of("BAHA", 0, "WEB", 1, "B-GLOBAL", 2); // 源优先级权重，越小越高
     private static final long DEFAULT_VALID_SECONDS = 432000; // 5 天
 
