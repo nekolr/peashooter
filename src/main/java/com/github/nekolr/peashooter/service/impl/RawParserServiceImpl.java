@@ -84,16 +84,70 @@ public class RawParserServiceImpl implements IRawParserService {
                             continue;
                         }
                     }
-                    String seriesId = null;
+                    String episodeName = episode.titleInfo().name();
+                    boolean matched = false;
+
+                    // 对所有 series 的 title 做精确匹配（忽略大小写）
                     for (Series series : monitoredSeries) {
-                        Optional<Item> optionalItem = this.getItem(episode, series, entry);
-                        if (optionalItem.isPresent()) {
-                            seriesId = series.id();
-                            items.add(optionalItem.get());
+                        if (equalsTitle(episodeName, series.title())) {
+                            log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                            Item item = this.parseEntry(entry, series, episode);
+                            if (item != null) {
+                                items.add(item);
+                                matched = true;
+                            }
                         }
                     }
 
-                    if (Objects.isNull(seriesId)) {
+                    // 如果 title 没有精确匹配，对所有 series 的别名做精确匹配
+                    if (!matched) {
+                        for (Series series : monitoredSeries) {
+                            List<FindAliasTitle.Title> aliasTitleList = this.sonarrIdTitleMap.get(series.id());
+                            if (aliasTitleList == null) continue;
+                            String[] aliasTitles = aliasTitleList.stream()
+                                    .map(FindAliasTitle.Title::title).toArray(String[]::new);
+                            if (equalsTitle(episodeName, aliasTitles)) {
+                                log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                                Item item = this.parseEntry(entry, series, episode);
+                                if (item != null) {
+                                    items.add(item);
+                                    matched = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // 模糊匹配（仅在精确匹配全部失败时）
+                    if (!matched) {
+                        for (Series series : monitoredSeries) {
+                            // 模糊匹配 title
+                            if (this.similarTitle(episodeName, series.title())) {
+                                log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                                Item item = this.parseEntry(entry, series, episode);
+                                if (item != null) {
+                                    items.add(item);
+                                    matched = true;
+                                }
+                                continue;
+                            }
+                            // 模糊匹配别名
+                            List<FindAliasTitle.Title> aliasTitleList = this.sonarrIdTitleMap.get(series.id());
+                            if (aliasTitleList != null) {
+                                String[] aliasTitles = aliasTitleList.stream()
+                                        .map(FindAliasTitle.Title::title).toArray(String[]::new);
+                                if (this.similarTitle(episodeName, aliasTitles)) {
+                                    log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                                    Item item = this.parseEntry(entry, series, episode);
+                                    if (item != null) {
+                                        items.add(item);
+                                        matched = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!matched) {
                         log.warn("未匹配到剧集，通过种子标题解析出的信息为: {}", episode);
                     }
 
@@ -161,34 +215,6 @@ public class RawParserServiceImpl implements IRawParserService {
         return filteredItems;
     }
 
-    private Optional<Item> getItem(RawParser.Episode episode, Series series, SyndEntry entry) {
-
-        if (this.equalsTitle(episode.titleInfo().name(), series.title())) {
-            log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.ofNullable(this.parseEntry(entry, series, episode));
-        }
-
-        if (this.similarTitle(episode.titleInfo().name(), series.title())) {
-            log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.ofNullable(this.parseEntry(entry, series, episode));
-        }
-
-        List<FindAliasTitle.Title> titleList = this.sonarrIdTitleMap.get(series.id());
-        String[] titles = titleList.stream().map(FindAliasTitle.Title::title).toArray(String[]::new);
-
-        if (this.equalsTitle(episode.titleInfo().name(), titles)) {
-            log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.ofNullable(this.parseEntry(entry, series, episode));
-        }
-
-        if (this.similarTitle(episode.titleInfo().name(), titles)) {
-            log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-            return Optional.ofNullable(this.parseEntry(entry, series, episode));
-        }
-
-        return Optional.empty();
-    }
-
     private Optional<SonarrIdAliasTitle> getSonarrIdAliasTitle(Series series) {
         Optional<FindById.TvResult> tvResultOp = Optional.empty();
         if (Objects.nonNull(series.imdbId())) {
@@ -209,59 +235,50 @@ public class RawParserServiceImpl implements IRawParserService {
 
     private synchronized void cachedSonarrIdTitleMap(List<Series> monitoredSeries) {
         try {
+            // 加载缓存文件
             SonarrIdAliasTitleCached cached = null;
-            List<SonarrIdAliasTitle> titles = new ArrayList<>();
             Path cachePath = Paths.get(SONARR_ID_ALIAS_TITLE_CACHED_FILE_PATH);
-
             if (Files.exists(cachePath)) {
                 String json = Files.readString(cachePath, StandardCharsets.UTF_8);
                 cached = JacksonUtils.tryParse(() ->
                         JacksonUtils.getObjectMapper().readValue(json, SonarrIdAliasTitleCached.class));
-
-                Map<String, List<FindAliasTitle.Title>> cachedMap = cached.titles().stream()
-                        .filter(t -> Objects.nonNull(t.titles))
-                        .collect(Collectors.toMap(SonarrIdAliasTitle::sonarrId, SonarrIdAliasTitle::titles, (v1, v2) -> v1));
-
-                // 是否需要更新缓存文件
-                boolean needWrite = false;
-
-                for (Series series : monitoredSeries) {
-                    boolean exists = cachedMap.containsKey(series.id());
-                    if (exists) {
-                        sonarrIdTitleMap.put(series.id(), cachedMap.get(series.id()));
-                        titles.add(new SonarrIdAliasTitle(series.id(), cachedMap.get(series.id())));
-                    } else {
-                        Optional<SonarrIdAliasTitle> sonarrIdAliasTitle = this.getSonarrIdAliasTitle(series);
-                        if (sonarrIdAliasTitle.isPresent()) {
-                            List<FindAliasTitle.Title> titleList = sonarrIdAliasTitle.get().titles();
-                            sonarrIdTitleMap.put(series.id(), titleList);
-                            titles.add(new SonarrIdAliasTitle(series.id(), titleList));
-                        }
-                        needWrite = true;
-                    }
-                }
-
-                if (needWrite) {
-                    SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(titles, cached.timestamp);
-                    this.writeCacheFile(newCached);
-                }
-
             }
 
-            // 缓存文件不存在或者缓存已过期
-            if (Objects.isNull(cached) || cached.timestamp.plusSeconds(DEFAULT_VALID_SECONDS).isBefore(Instant.now())) {
-                for (Series series : monitoredSeries) {
+            // 判断缓存是否有效（存在且未过期）
+            boolean cacheValid = cached != null
+                    && cached.timestamp().plusSeconds(DEFAULT_VALID_SECONDS).isAfter(Instant.now());
+
+            Map<String, List<FindAliasTitle.Title>> cachedMap = Collections.emptyMap();
+            if (cacheValid) {
+                cachedMap = cached.titles().stream()
+                        .filter(t -> Objects.nonNull(t.titles))
+                        .collect(Collectors.toMap(SonarrIdAliasTitle::sonarrId, SonarrIdAliasTitle::titles, (v1, _) -> v1));
+            }
+
+            List<SonarrIdAliasTitle> newTitles = new ArrayList<>();
+            boolean needWrite = !cacheValid;
+
+            for (Series series : monitoredSeries) {
+                if (cacheValid && cachedMap.containsKey(series.id())) {
+                    // 使用缓存
+                    List<FindAliasTitle.Title> titleList = cachedMap.get(series.id());
+                    sonarrIdTitleMap.put(series.id(), titleList);
+                    newTitles.add(new SonarrIdAliasTitle(series.id(), titleList));
+                } else {
+                    // 从 TheMovieDB 获取
                     Optional<SonarrIdAliasTitle> sonarrIdAliasTitle = this.getSonarrIdAliasTitle(series);
-                    if (sonarrIdAliasTitle.isPresent()) {
-                        List<FindAliasTitle.Title> titleList = sonarrIdAliasTitle.get().titles();
-                        sonarrIdTitleMap.put(series.id(), titleList);
-                        titles.add(sonarrIdAliasTitle.get());
-                    } else {
-                        sonarrIdTitleMap.put(series.id(), Collections.emptyList());
-                        titles.add(new SonarrIdAliasTitle(series.id(), Collections.emptyList()));
-                    }
+                    List<FindAliasTitle.Title> titleList = sonarrIdAliasTitle
+                            .map(SonarrIdAliasTitle::titles)
+                            .orElse(Collections.emptyList());
+                    sonarrIdTitleMap.put(series.id(), titleList);
+                    newTitles.add(new SonarrIdAliasTitle(series.id(), titleList));
+                    needWrite = true;
                 }
-                SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(titles, Instant.now());
+            }
+
+            // 缓存无效或有新增数据时，写入缓存文件
+            if (needWrite) {
+                SonarrIdAliasTitleCached newCached = new SonarrIdAliasTitleCached(newTitles, Instant.now());
                 this.writeCacheFile(newCached);
             }
         } catch (IOException e) {
