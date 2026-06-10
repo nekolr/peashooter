@@ -1,0 +1,12 @@
+.git
+target
+node_modules
+*.md
+.idea
+.vscode
+*.log
+.DS_Store
+.gitignore
+.env*
+docker-compose*.yml
+.github
