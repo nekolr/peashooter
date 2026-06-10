@@ -25,7 +25,7 @@ ENV PEASHOOTER_USERNAME=admin \
 RUN useradd -r -U -m -d ${HOME_DIR} peashooter
 
 WORKDIR ${HOME_DIR}
-COPY --chmod=755 --from=backend-build /usr/src/app/target/peashooter.jar .
+COPY --chmod=755 --from=build /usr/src/app/target/peashooter.jar .
 RUN mkdir -p peashooter && chown -R peashooter:peashooter ${HOME_DIR}
 
 EXPOSE 8962
