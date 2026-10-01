@@ -1,6 +1,7 @@
 package com.github.nekolr.peashooter.constant;
 
 import java.io.File;
+import java.util.List;
 
 public interface Peashooter {
 
@@ -79,6 +80,69 @@ public interface Peashooter {
     String EPISODE_TITLE_TEMPLATE = "{0} - S{1}E{2} - {3} - {4} - {5}";
 
     /**
+     * Newznab/Torznab 接口路径（Sonarr 索引器的 apiPath）
+     */
+    String NEWZNAB_API_PATH = "/api/newznab";
+
+    /**
+     * api key 参数名，统一使用全小写（与 Newznab 标准一致）
+     */
+    String API_KEY_PARAM = "apikey";
+
+    /**
+     * Newznab 属性命名空间
+     */
+    String NEWZNAB_ATTR_NAMESPACE = "http://www.newznab.com/DTD/2010/feeds/attributes/";
+
+    /**
+     * Torznab 属性命名空间。Sonarr 的 torznab.xsd 以此为 targetNamespace，
+     * 且 TorznabRssParser 严格按该命名空间读取属性（不读 newznab 命名空间）
+     */
+    String TORZNAB_ATTR_NAMESPACE = "http://torznab.com/schemas/2015/feed";
+
+    /**
+     * Newznab 协议版本
+     */
+    String NEWZNAB_API_VERSION = "1.0";
+
+    /**
+     * Newznab 分类：电视
+     */
+    int NEWZNAB_CATEGORY_TV = 5000;
+
+    /**
+     * Newznab 分类：电视/WEB-DL
+     */
+    int NEWZNAB_CATEGORY_TV_WEB_DL = 5010;
+
+    /**
+     * Newznab 分类：动漫
+     */
+    int NEWZNAB_CATEGORY_ANIME = 5070;
+
+    /**
+     * 结果条目同时标注的分类：TV、TV/WEB-DL、TV/Anime
+     * Newznab 规范允许 category 出现多次，多标注可兼容按不同分类检索的客户端
+     */
+    List<Integer> NEWZNAB_ITEM_CATEGORIES = List.of(
+            NEWZNAB_CATEGORY_TV, NEWZNAB_CATEGORY_TV_WEB_DL, NEWZNAB_CATEGORY_ANIME);
+
+    /**
+     * Newznab 搜索结果默认条数
+     */
+    int NEWZNAB_DEFAULT_LIMIT = 100;
+
+    /**
+     * Newznab 搜索结果最大条数
+     */
+    int NEWZNAB_MAX_LIMIT = 100;
+
+    /**
+     * Newznab 条目缓存的有效期（秒），避免每次搜索都全量读盘解析
+     */
+    int NEWZNAB_ITEMS_CACHE_SECONDS = 60;
+
+    /**
      * 获取分组的 rss 文件地址
      */
     static String getGroupRssFilepath(Long groupId) {
@@ -125,5 +189,18 @@ public interface Peashooter {
      */
     static String getAllGroupRssFileUrl(String mappingUrl) {
         return mappingUrl + "/api/group/allRss.xml";
+    }
+
+    /**
+     * 获取 Newznab/Torznab 索引器访问地址
+     */
+    static String getNewznabUrl(String mappingUrl) {
+        if (mappingUrl == null || mappingUrl.isBlank()) {
+            return "";
+        }
+        String baseUrl = mappingUrl.endsWith("/")
+                ? mappingUrl.substring(0, mappingUrl.length() - 1)
+                : mappingUrl;
+        return baseUrl + NEWZNAB_API_PATH;
     }
 }

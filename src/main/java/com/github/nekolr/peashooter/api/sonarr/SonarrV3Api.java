@@ -3,6 +3,8 @@ package com.github.nekolr.peashooter.api.sonarr;
 
 import com.github.nekolr.peashooter.api.sonarr.request.AddWebhookNotification;
 import com.github.nekolr.peashooter.api.sonarr.request.AddRssIndexer;
+import com.github.nekolr.peashooter.api.sonarr.request.AddTorznabIndexer;
+import com.github.nekolr.peashooter.api.sonarr.response.Indexer;
 import com.github.nekolr.peashooter.api.sonarr.response.Notification;
 import com.github.nekolr.peashooter.api.sonarr.response.Queue;
 import com.github.nekolr.peashooter.api.sonarr.response.Series;
@@ -15,6 +17,10 @@ public interface SonarrV3Api {
     String X_API_KEY_HEADER_NAME = "X-Api-Key";
 
     String ADD_INDEXER_URI = "/api/v3/indexer";
+
+    String GET_INDEXER_URI = "/api/v3/indexer";
+
+    String UPDATE_INDEXER_URI = "/api/v3/indexer/";
 
     String ADD_NOTIFICATION_URI = "/api/v3/notification";
 
@@ -37,6 +43,25 @@ public interface SonarrV3Api {
      * 添加 rss 索引器
      */
     Boolean addRssIndexer(AddRssIndexer indexer);
+
+    /**
+     * 添加 Torznab（Newznab）索引器
+     *
+     * @throws IllegalStateException Sonarr 返回错误状态时抛出，异常信息包含 status 与响应体
+     */
+    Boolean addTorznabIndexer(AddTorznabIndexer indexer);
+
+    /**
+     * 更新 Torznab（Newznab）索引器
+     *
+     * @throws IllegalStateException Sonarr 返回错误状态时抛出，异常信息包含 status 与响应体
+     */
+    Boolean updateTorznabIndexer(AddTorznabIndexer indexer);
+
+    /**
+     * 获取所有的索引器
+     */
+    List<Indexer> getIndexers();
 
     /**
      * 获取所有的通知

@@ -50,4 +50,12 @@ public class SonarrController {
     public JsonBean<Boolean> setupAllGroupIndexer() {
         return JsonBean.ok(sonarrService.setupAllGroupIndexer());
     }
+
+    /**
+     * 设置 Torznab（Newznab）索引器
+     */
+    @PostMapping("setupTorznabIndexer")
+    public JsonBean<Boolean> setupTorznabIndexer() {
+        return JsonBean.ok(sonarrService.setupTorznabIndexer());
+    }
 }

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
@@ -27,13 +28,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static com.github.nekolr.peashooter.constant.Peashooter.API_KEY_PARAM;
+import static com.github.nekolr.peashooter.constant.Peashooter.CHARSET;
+import static com.github.nekolr.peashooter.constant.Peashooter.NEWZNAB_API_PATH;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
 
     private static final String TOKEN_HEADER_VALUE_PREFIX = "Bearer ";
-    private static final String API_KEY_PARAM = "apiKey";
 
     private final IUserService userService;
     private final UserSettings userSettings;
@@ -132,23 +136,39 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                         }
                     });
                 } else {
-                    sendUnauthorizedResponse(response);
+                    sendUnauthorizedResponse(request, response);
                 }
             } else {
                 chain.doFilter(request, response);
             }
         } else {
             log.debug("no valid JWT token found, uri: {}", requestURI);
-            sendUnauthorizedResponse(response);
+            sendUnauthorizedResponse(request, response);
         }
     }
 
-    private void sendUnauthorizedResponse(HttpServletResponse response) throws IOException {
+    private void sendUnauthorizedResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Newznab/Torznab 客户端（Sonarr）只解析 XML error，返回 JSON 会表现为难定位的解析/连接失败
+        if (isNewznabRequest(request.getRequestURI())) {
+            sendNewznabErrorResponse(response);
+            return;
+        }
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         String json = JacksonUtils.tryParse(() ->
                 JacksonUtils.getObjectMapper().writeValueAsString(JsonBean.fail("unauthorized")));
         response.getWriter().write(json);
+    }
+
+    private boolean isNewznabRequest(String requestURI) {
+        return StringUtils.hasText(requestURI) && requestURI.startsWith(NEWZNAB_API_PATH);
+    }
+
+    private void sendNewznabErrorResponse(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_XML_VALUE);
+        response.setCharacterEncoding(CHARSET);
+        response.getWriter().write("<error code=\"100\" description=\"Missing or invalid apikey\"/>");
     }
 
     private String resolveToken(HttpServletRequest request) {

@@ -2,6 +2,7 @@ package com.github.nekolr.peashooter.api.sonarr.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,14 @@ public class AddRssIndexer {
         fields.add(new Field("baseUrl", 0, "RSS URL", "textbox", null, false, "normal", false, baseUrl));
     }
 
+    /**
+     * 索引器字段（请求与响应共用结构）
+     * <p>
+     * 既用于构造请求体（序列化），也用于解析 Sonarr 返回的索引器配置（反序列化），
+     * 因此必须保留无参构造器，否则 Jackson 无法实例化。
+     */
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class Field {
         private String name;
