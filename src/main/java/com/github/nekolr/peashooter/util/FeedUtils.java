@@ -4,9 +4,7 @@ import com.rometools.rome.feed.synd.*;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.SyndFeedOutput;
-import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jdom2.input.SAXBuilder;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -15,18 +13,21 @@ import java.io.Writer;
 import java.util.*;
 
 public class FeedUtils {
+
+    /**
+     * 解析 feed 文本。
+     * <p>
+     * 直接交给 ROME 解析，不要自己用 SAXBuilder 建 Document 再塞进来：ROME 内部的
+     * WireFeedInput 会禁用外部实体 / 外部 DTD 并关闭实体展开（防 XXE / SSRF / DoS），
+     * 而裸的 SAXBuilder 默认允许实体展开（jdom2 默认 expandEntities=true），
+     * 相当于绕过了这层防护。
+     */
     public static SyndFeed getFeed(String xml) {
-        Document document;
-        SyndFeed feed = null;
-        SAXBuilder saxBuilder = new SAXBuilder();
         try (StringReader reader = new StringReader(xml)) {
-            SyndFeedInput feedInput = new SyndFeedInput();
-            document = saxBuilder.build(reader);
-            feed = feedInput.build(document);
+            return new SyndFeedInput().build(reader);
         } catch (Exception e) {
             throw new RuntimeException("解析 feed 失败", e);
         }
-        return feed;
     }
 
     public static String getAuthor(SyndFeed feed) {
@@ -267,7 +268,23 @@ public class FeedUtils {
         return new SyndEnclosureImpl();
     }
 
-    public static Element getForeignMarkup(SyndEntry entry, String name) {
+    /**
+     * 读取外部标记（foreign markup）子节点的文本值，例如 &lt;torrent&gt;&lt;pubDate&gt;...&lt;/pubDate&gt;&lt;/torrent&gt;
+     * <p>
+     * 外部标记的模型类型由 ROME 决定（当前为 org.jdom2.Element），这里把它收敛在工具类内部，
+     * 调用方只看到 String，不直接依赖 jdom2 的类型。
+     *
+     * @param entry       条目
+     * @param elementName 外部标记的元素名，如 torrent
+     * @param childName   外部标记下的子元素名，如 pubDate
+     * @return 子元素的文本值，不存在时返回 null
+     */
+    public static String getForeignChildValue(SyndEntry entry, String elementName, String childName) {
+        Element element = getForeignMarkup(entry, elementName);
+        return getChildValue(element, childName);
+    }
+
+    private static Element getForeignMarkup(SyndEntry entry, String name) {
         if (Objects.nonNull(entry)) {
             List<Element> foreignMarkup = entry.getForeignMarkup();
             if (Objects.nonNull(foreignMarkup) & !foreignMarkup.isEmpty()) {
@@ -280,7 +297,7 @@ public class FeedUtils {
         return null;
     }
 
-    public static String getChildValue(Element element, String name) {
+    private static String getChildValue(Element element, String name) {
         if (Objects.nonNull(element)) {
             List<Element> children = element.getChildren();
             if (Objects.nonNull(children) & !children.isEmpty()) {
