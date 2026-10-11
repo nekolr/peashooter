@@ -5,7 +5,10 @@ import com.github.nekolr.peashooter.dto.GrabEvent;
 import com.github.nekolr.peashooter.dto.JsonBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -20,7 +23,11 @@ public class TorrentsController {
      */
     @PostMapping("/onGrab")
     public JsonBean<Void> onGrab(@RequestBody GrabEvent grabEvent) {
-        if (!grabEvent.eventType().equals("Test")) {
+        if (!"Test".equals(grabEvent.eventType())) {
+            if (Objects.isNull(grabEvent.release()) || !StringUtils.hasText(grabEvent.downloadId())) {
+                log.warn("Webhook 事件缺少 release 或 downloadId，忽略: {}", grabEvent.eventType());
+                return JsonBean.ok();
+            }
             String title = grabEvent.release().releaseTitle();
             String downloadId = grabEvent.downloadId();
             if (!qBittorrentApi.renameTorrent(downloadId, title)) {
