@@ -5,7 +5,6 @@ import com.github.nekolr.peashooter.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,7 +19,6 @@ public class DataSourceRssRefreshJobServiceImpl implements DataSourceRssRefreshJ
     private final IDataSourceService dataSourceService;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void doExecute(Long datasourceId) {
         log.info("开始执行数据源：{} 的刷新任务", datasourceId);
 
@@ -29,8 +27,14 @@ public class DataSourceRssRefreshJobServiceImpl implements DataSourceRssRefreshJ
             log.info("数据源：{} 刷新完毕，开始搜索使用了该数据源的分组", datasourceId);
             List<GroupDataSource> referenceGroups = gdService.getByDatasourceId(datasourceId);
             for (GroupDataSource referenceGroup : referenceGroups) {
-                log.info("刷新分组：{} 的转换结果", referenceGroup.getGroupId());
-                groupService.refreshRss(referenceGroup.getGroupId());
+                Long groupId = referenceGroup.getGroupId();
+                log.info("刷新分组：{} 的转换结果", groupId);
+                try {
+                    groupService.refreshRss(groupId);
+                } catch (Exception e) {
+                    // 单个分组刷新失败不影响后续分组
+                    log.error("刷新分组：{} 失败", groupId, e);
+                }
             }
             log.info("刷新分组完毕，开始执行自动解析转换任务");
             rawParserService.autoParse(datasourceId);

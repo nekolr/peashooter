@@ -156,6 +156,9 @@ public class RawParserServiceImpl implements IRawParserService {
 
                 } catch (ParseTitleException e) {
                     log.error("解析标题失败: {}", title);
+                } catch (Exception e) {
+                    // 单个条目解析失败不影响后续条目
+                    log.warn("处理条目 [{}] 失败，跳过", title, e);
                 }
             }
 
@@ -350,7 +353,10 @@ public class RawParserServiceImpl implements IRawParserService {
                         .filter(season -> !season.seasonNumber().equals(0))
                         .sorted(Comparator.comparing(Series.Season::seasonNumber))
                         .limit(episode.seasonInfo().season() - 1)
-                        .map(season -> season.statistics().totalEpisodeCount())
+                        // statistics 可能为 null，按 0 处理
+                        .map(season -> Objects.nonNull(season.statistics())
+                                ? season.statistics().totalEpisodeCount() : 0)
+                        .filter(Objects::nonNull)
                         .reduce(0, Integer::sum);
                 if (episode.episodeInfo().episode() > preEpisodeNumbers) {
                     // 计算相对集数
@@ -373,9 +379,22 @@ public class RawParserServiceImpl implements IRawParserService {
         Date pubDate = resolvePubDateUtil.resolvePubDate(entry, link);
 
         List<SyndEnclosure> enclosures = FeedUtils.getEnclosures(entry);
-        SyndEnclosure first = enclosures.getFirst();
+        SyndEnclosure first = null;
+        if (!CollectionUtils.isEmpty(enclosures)) {
+            first = enclosures.getFirst();
+        }
 
-        Enclosure enclosure = new Enclosure(first.getUrl(), first.getLength(), first.getType());
+        // 没有 enclosure 时回退用条目链接构造，连链接也没有则放弃
+        Enclosure enclosure;
+        if (Objects.nonNull(first) && StringUtils.hasText(first.getUrl())) {
+            enclosure = new Enclosure(first.getUrl(), first.getLength(), first.getType());
+        } else if (StringUtils.hasText(link)) {
+            log.warn("条目 [{}] 缺少 enclosure，回退使用条目链接", title);
+            enclosure = new Enclosure(link, null, null);
+        } else {
+            log.warn("条目 [{}] 既没有 enclosure 也没有链接，跳过", title);
+            return null;
+        }
         return new Item(title, link, pubDate, guid, enclosure, series.id(), seasonNum, Integer.parseInt(episodeNumStr), episode.source());
     }
 
