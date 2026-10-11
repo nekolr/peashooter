@@ -37,7 +37,7 @@ public class DataSourceRssRefreshJobServiceImpl implements DataSourceRssRefreshJ
                 }
             }
             log.info("刷新分组完毕，开始执行自动解析转换任务");
-            rawParserService.autoParse(datasourceId);
+            rawParserService.autoParseAll();
             log.info("刷新任务执行结束");
             return;
         }

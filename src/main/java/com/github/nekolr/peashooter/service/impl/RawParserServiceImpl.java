@@ -5,6 +5,7 @@ import com.github.nekolr.peashooter.api.sonarr.response.Series;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
 import com.github.nekolr.peashooter.api.themoviedb.response.FindAliasTitle;
 import com.github.nekolr.peashooter.api.themoviedb.response.FindById;
+import com.github.nekolr.peashooter.entity.domain.DataSource;
 import com.github.nekolr.peashooter.exception.ParseTitleException;
 import com.github.nekolr.peashooter.parser.RawParser;
 import com.github.nekolr.peashooter.rss.Enclosure;
@@ -12,6 +13,7 @@ import com.github.nekolr.peashooter.rss.Item;
 import com.github.nekolr.peashooter.rss.convertor.RssConvertor;
 import com.github.nekolr.peashooter.rss.loader.RssLoader;
 import com.github.nekolr.peashooter.rss.writer.RssWriter;
+import com.github.nekolr.peashooter.service.IDataSourceService;
 import com.github.nekolr.peashooter.service.IRawParserService;
 import com.github.nekolr.peashooter.util.*;
 import com.rometools.rome.feed.synd.SyndEnclosure;
@@ -59,41 +61,96 @@ public class RawParserServiceImpl implements IRawParserService {
     private final RssConvertor rssConvertor;
     private final TheMovieDbApi theMovieDbApi;
     private final ResolvePubDateUtil resolvePubDateUtil;
+    private final IDataSourceService dataSourceService;
 
     /**
-     * 自动解析数据源中的剧集信息
+     * 自动解析所有数据源中的剧集信息，全量重建自动分组的 rss。
+     * 遍历每个数据源解析出的条目统一合并后再做优先级过滤与去重，避免多数据源互相覆盖。
      */
     @Override
-    public void autoParse(Long datasourceId) {
+    public void autoParseAll() {
         List<Series> monitoredSeries = this.getMonitoredSeries();
         this.cachedSonarrIdTitleMap(monitoredSeries);
 
         // 方法级缓存：同一次解析中对同一剧集只调用一次 Sonarr API
         Map<String, Series> seriesCache = new HashMap<>();
 
-        String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(datasourceId));
-        SyndFeed syndFeed = FeedUtils.getFeed(rss);
-        List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
         List<Item> items = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(entryList)) {
-            for (SyndEntry entry : entryList) {
-                String title = FeedUtils.getTitle(entry);
-                try {
-                    log.info("开始解析种子标题: {}", title);
-                    RawParser.Episode episode = RawParser.parse(title);
-                    if (Objects.nonNull(episode.source())) {
-                        if (EXCLUDE_SOURCES.contains(episode.source().toUpperCase())) {
-                            log.info("跳过 {} 源，通过种子标题解析出的信息为: {}", String.join(",", EXCLUDE_SOURCES), episode);
-                            continue;
+        List<DataSource> dataSources = dataSourceService.findAll();
+        for (DataSource dataSource : dataSources) {
+            Long datasourceId = dataSource.getId();
+            try {
+                String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(datasourceId));
+                SyndFeed syndFeed = FeedUtils.getFeed(rss);
+                List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
+                if (CollectionUtils.isEmpty(entryList)) {
+                    continue;
+                }
+                items.addAll(this.parseEntries(entryList, monitoredSeries, seriesCache));
+            } catch (Exception e) {
+                // 单个数据源解析失败不影响其他数据源
+                log.warn("解析数据源 {} 的 rss 失败，跳过", datasourceId, e);
+            }
+        }
+
+        if (items.isEmpty()) {
+            return;
+        }
+
+        // 根据源优先级，排除掉不需要的源
+        items = this.filterItemsBySourcePriority(items);
+
+        String xml = rssConvertor.combine(items, null);
+        String signature = Md5Util.md5(xml);
+
+        synchronized (this) {
+            if (!signature.equals(automatedRssFileSignature)) {
+                automatedRssFileSignature = signature;
+                rssWriter.write(xml, getAutomatedGroupRssFilepath());
+            }
+        }
+    }
+
+    /**
+     * 解析一批 RSS 条目，返回匹配到的 Item 列表
+     */
+    private List<Item> parseEntries(List<SyndEntry> entryList, List<Series> monitoredSeries, Map<String, Series> seriesCache) {
+        List<Item> items = new ArrayList<>();
+        for (SyndEntry entry : entryList) {
+            String title = FeedUtils.getTitle(entry);
+            try {
+                log.info("开始解析种子标题: {}", title);
+                RawParser.Episode episode = RawParser.parse(title);
+                if (Objects.nonNull(episode.source())) {
+                    if (EXCLUDE_SOURCES.contains(episode.source().toUpperCase())) {
+                        log.info("跳过 {} 源，通过种子标题解析出的信息为: {}", String.join(",", EXCLUDE_SOURCES), episode);
+                        continue;
+                    }
+                }
+                String episodeName = episode.titleInfo().name();
+                boolean matched = false;
+
+                // 对所有 series 的 title 做精确匹配（忽略大小写）
+                for (Series series : monitoredSeries) {
+                    if (equalsTitle(episodeName, series.title())) {
+                        log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                        Item item = this.parseEntry(entry, series, episode, seriesCache);
+                        if (item != null) {
+                            items.add(item);
+                            matched = true;
                         }
                     }
-                    String episodeName = episode.titleInfo().name();
-                    boolean matched = false;
+                }
 
-                    // 对所有 series 的 title 做精确匹配（忽略大小写）
+                // 如果 title 没有精确匹配，对所有 series 的别名做精确匹配
+                if (!matched) {
                     for (Series series : monitoredSeries) {
-                        if (equalsTitle(episodeName, series.title())) {
-                            log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                        List<FindAliasTitle.Title> aliasTitleList = this.sonarrIdTitleMap.get(series.id());
+                        if (aliasTitleList == null) continue;
+                        String[] aliasTitles = aliasTitleList.stream()
+                                .map(FindAliasTitle.Title::title).toArray(String[]::new);
+                        if (equalsTitle(episodeName, aliasTitles)) {
+                            log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
                             Item item = this.parseEntry(entry, series, episode, seriesCache);
                             if (item != null) {
                                 items.add(item);
@@ -101,16 +158,28 @@ public class RawParserServiceImpl implements IRawParserService {
                             }
                         }
                     }
+                }
 
-                    // 如果 title 没有精确匹配，对所有 series 的别名做精确匹配
-                    if (!matched) {
-                        for (Series series : monitoredSeries) {
-                            List<FindAliasTitle.Title> aliasTitleList = this.sonarrIdTitleMap.get(series.id());
-                            if (aliasTitleList == null) continue;
+                // 模糊匹配（仅在精确匹配全部失败时）
+                if (!matched) {
+                    for (Series series : monitoredSeries) {
+                        // 模糊匹配 title
+                        if (this.similarTitle(episodeName, series.title())) {
+                            log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                            Item item = this.parseEntry(entry, series, episode, seriesCache);
+                            if (item != null) {
+                                items.add(item);
+                                matched = true;
+                            }
+                            continue;
+                        }
+                        // 模糊匹配别名
+                        List<FindAliasTitle.Title> aliasTitleList = this.sonarrIdTitleMap.get(series.id());
+                        if (aliasTitleList != null) {
                             String[] aliasTitles = aliasTitleList.stream()
                                     .map(FindAliasTitle.Title::title).toArray(String[]::new);
-                            if (equalsTitle(episodeName, aliasTitles)) {
-                                log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
+                            if (this.similarTitle(episodeName, aliasTitles)) {
+                                log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
                                 Item item = this.parseEntry(entry, series, episode, seriesCache);
                                 if (item != null) {
                                     items.add(item);
@@ -119,62 +188,20 @@ public class RawParserServiceImpl implements IRawParserService {
                             }
                         }
                     }
-
-                    // 模糊匹配（仅在精确匹配全部失败时）
-                    if (!matched) {
-                        for (Series series : monitoredSeries) {
-                            // 模糊匹配 title
-                            if (this.similarTitle(episodeName, series.title())) {
-                                log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                                Item item = this.parseEntry(entry, series, episode, seriesCache);
-                                if (item != null) {
-                                    items.add(item);
-                                    matched = true;
-                                }
-                                continue;
-                            }
-                            // 模糊匹配别名
-                            List<FindAliasTitle.Title> aliasTitleList = this.sonarrIdTitleMap.get(series.id());
-                            if (aliasTitleList != null) {
-                                String[] aliasTitles = aliasTitleList.stream()
-                                        .map(FindAliasTitle.Title::title).toArray(String[]::new);
-                                if (this.similarTitle(episodeName, aliasTitles)) {
-                                    log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                                    Item item = this.parseEntry(entry, series, episode, seriesCache);
-                                    if (item != null) {
-                                        items.add(item);
-                                        matched = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (!matched) {
-                        log.warn("未匹配到剧集，通过种子标题解析出的信息为: {}", episode);
-                    }
-
-                } catch (ParseTitleException e) {
-                    log.error("解析标题失败: {}", title);
-                } catch (Exception e) {
-                    // 单个条目解析失败不影响后续条目
-                    log.warn("处理条目 [{}] 失败，跳过", title, e);
                 }
-            }
 
-            // 根据源优先级，排除掉不需要的源
-            items = this.filterItemsBySourcePriority(items);
-
-            String xml = rssConvertor.combine(items, null);
-            String signature = Md5Util.md5(xml);
-
-            synchronized (this) {
-                if (!signature.equals(automatedRssFileSignature)) {
-                    automatedRssFileSignature = signature;
-                    rssWriter.write(xml, getAutomatedGroupRssFilepath());
+                if (!matched) {
+                    log.warn("未匹配到剧集，通过种子标题解析出的信息为: {}", episode);
                 }
+
+            } catch (ParseTitleException e) {
+                log.error("解析标题失败: {}", title);
+            } catch (Exception e) {
+                // 单个条目解析失败不影响后续条目
+                log.warn("处理条目 [{}] 失败，跳过", title, e);
             }
         }
+        return items;
     }
 
     /**
