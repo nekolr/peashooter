@@ -382,7 +382,7 @@ public class RawParserServiceImpl implements IRawParserService {
                         .limit(episode.seasonInfo().season() - 1)
                         // statistics 可能为 null，按 0 处理
                         .map(season -> Objects.nonNull(season.statistics())
-                                ? season.statistics().totalEpisodeCount() : 0)
+                                ? season.statistics().totalEpisodeCount() : null)
                         .filter(Objects::nonNull)
                         .reduce(0, Integer::sum);
                 if (episode.episodeInfo().episode() > preEpisodeNumbers) {
