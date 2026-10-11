@@ -1,7 +1,7 @@
 package com.github.nekolr.peashooter.util;
 
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 public class RandomUtil {
     private static final char[] ORIGINAL_CHARS = {
@@ -9,12 +9,13 @@ public class RandomUtil {
             'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     public static String generate(int length) {
         final int len = ORIGINAL_CHARS.length;
-        Random random = new Random();
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < length; i++) {
-            builder.append(ORIGINAL_CHARS[random.nextInt(len)]);
+            builder.append(ORIGINAL_CHARS[RANDOM.nextInt(len)]);
         }
         return builder.toString();
     }
