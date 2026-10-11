@@ -6,6 +6,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +54,11 @@ public class SettingsManager {
      */
     public boolean validApiKey(String apiKey) {
         if (StringUtils.hasText(apiKey)) {
-            return apiKey.equals(settings.getBasic().getApiKey());
+            // 常量时间比较，避免时序攻击逐位猜测 api key
+            String stored = settings.getBasic().getApiKey();
+            return stored != null && MessageDigest.isEqual(
+                    apiKey.getBytes(StandardCharsets.UTF_8),
+                    stored.getBytes(StandardCharsets.UTF_8));
         }
         return false;
     }

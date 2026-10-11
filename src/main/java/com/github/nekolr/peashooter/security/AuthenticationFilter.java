@@ -105,6 +105,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         String apiKey = request.getParameter(API_KEY_PARAM);
         if (settingsManager.validApiKey(apiKey)) {
             UserInfoDto userInfoDto = userService.findByUsername(userSettings.getUsername());
+            if (Objects.isNull(userInfoDto)) {
+                sendUnauthorizedResponse(request, response);
+                return;
+            }
             // 使用 ScopedValue 在整个过滤器链执行期间绑定用户信息
             contextHolder.runWithUsername(userInfoDto.username(), () -> {
                 try {
@@ -122,24 +126,19 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         Claims claims;
         if (StringUtils.hasText(jwt) && (claims = tokenProvider.getClaims(jwt)) != null) {
             String username = claims.getSubject();
-            // 只有在没有当前用户时才会放入
-            if (Objects.isNull(contextHolder.getCurrUsername())) {
-                UserInfoDto userInfoDto = userService.findByUsername(username);
-                if (Objects.nonNull(userInfoDto)) {
-                    // 使用 ScopedValue 在整个过滤器链执行期间绑定用户信息
-                    contextHolder.runWithUsername(userInfoDto.username(), () -> {
-                        try {
-                            chain.doFilter(request, response);
-                        } catch (IOException | ServletException e) {
-                            log.error("Error processing filter chain", e);
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } else {
-                    sendUnauthorizedResponse(request, response);
-                }
+            UserInfoDto userInfoDto = userService.findByUsername(username);
+            if (Objects.nonNull(userInfoDto)) {
+                // 使用 ScopedValue 在整个过滤器链执行期间绑定用户信息
+                contextHolder.runWithUsername(userInfoDto.username(), () -> {
+                    try {
+                        chain.doFilter(request, response);
+                    } catch (IOException | ServletException e) {
+                        log.error("Error processing filter chain", e);
+                        throw new RuntimeException(e);
+                    }
+                });
             } else {
-                chain.doFilter(request, response);
+                sendUnauthorizedResponse(request, response);
             }
         } else {
             log.debug("no valid JWT token found, uri: {}", requestURI);
