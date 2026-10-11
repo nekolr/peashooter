@@ -84,6 +84,12 @@ public class DataSourceServiceImpl implements IDataSourceService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(key = "'all'")
     public DataSource save(DataSource dataSource) {
+        // 校验刷新间隔：缺失或非正数时直接报错，避免出现保存成功但永不刷新的静默失效
+        Integer refreshSeconds = dataSource.getRefreshSeconds();
+        if (Objects.isNull(refreshSeconds) || refreshSeconds <= 0) {
+            throw new IllegalArgumentException("刷新间隔必须为正整数秒");
+        }
+
         dataSource = dataSourceRepository.save(dataSource);
         if (Objects.nonNull(dataSource.getId())) {
             jobManager.removeJob(String.valueOf(dataSource.getId()));
@@ -120,6 +126,8 @@ public class DataSourceServiceImpl implements IDataSourceService {
                     rssWriter.write(xml, getDatasourceRssFilepath(id));
                     refreshed = true;
                 }
+            } else {
+                log.warn("加载数据源 {} 的 rss 失败，url: {}", id, dataSource.getSourceUrl());
             }
         }
         return refreshed;

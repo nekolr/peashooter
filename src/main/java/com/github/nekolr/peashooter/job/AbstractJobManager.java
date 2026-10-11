@@ -47,6 +47,8 @@ public abstract class AbstractJobManager {
             this.quartzScheduler.scheduleJob(job, trigger);
         } catch (SchedulerException e) {
             log.error("创建定时任务失败", e);
+            // 重新抛出让调用方（如数据源保存）的事务回滚，避免出现保存成功但永不刷新的静默失效
+            throw new RuntimeException("创建定时任务失败", e);
         }
     }
 
