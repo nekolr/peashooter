@@ -213,11 +213,11 @@ public class RawParserServiceImpl implements IRawParserService {
     private List<Item> filterItemsBySourcePriority(List<Item> items) {
         List<Item> filteredItems = new ArrayList<>();
 
-        Map<String, List<Item>> groupedItems = items.stream()
-                .collect(Collectors.groupingBy(item -> item.seriesId() + item.seasonNum() + item.episodeNum()));
+        Map<GroupKey, List<Item>> groupedItems = items.stream()
+                .collect(Collectors.groupingBy(item -> new GroupKey(item.seriesId(), item.seasonNum(), item.episodeNum())));
 
         List<String> sources = SOURCE_WEIGHT_MAP.keySet().stream().toList();
-        for (Map.Entry<String, List<Item>> entry : groupedItems.entrySet()) {
+        for (Map.Entry<GroupKey, List<Item>> entry : groupedItems.entrySet()) {
             List<Item> seriesItems = entry.getValue();
 
             // 按源优先级过滤
@@ -443,6 +443,13 @@ public class RawParserServiceImpl implements IRawParserService {
      * @param timestamp
      */
     private record SonarrIdAliasTitleCached(List<SonarrIdAliasTitle> titles, Instant timestamp) {
+
+    }
+
+    /**
+     * 剧集条目的分组 key（避免直接字符串拼接导致的 key 冲突）
+     */
+    private record GroupKey(String seriesId, int seasonNum, int episodeNum) {
 
     }
 
