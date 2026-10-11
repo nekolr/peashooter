@@ -20,7 +20,7 @@ public class SeriesName {
     /**
      * 英文标题
      */
-    @Column(name = "title_en")
+    @Column(name = "title_en", unique = true)
     private String titleEn;
 
     /**

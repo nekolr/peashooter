@@ -8,12 +8,12 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 
 @Service
@@ -32,17 +32,22 @@ public class SeriesNameServiceImpl implements ISeriesNameService {
     @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {@CacheEvict(key = "#p0.titleEn", condition = "#p0.titleEn != null")})
     public void saveSeriesName(SeriesName seriesName) {
+        if (StringUtils.hasText(seriesName.getTitleEn())) {
+            // 写库前先按英文标题查重，避免重复插入
+            SeriesName existing = seriesNameRepository.findByTitleEn(seriesName.getTitleEn()).orElse(null);
+            if (Objects.nonNull(existing)) {
+                existing.setTitleZhCN(seriesName.getTitleZhCN());
+                seriesNameRepository.save(existing);
+                return;
+            }
+        }
         seriesNameRepository.save(seriesName);
     }
 
     @Override
     @Cacheable(key = "#p0", unless = "null == #result")
     public SeriesName findByTitleEn(String titleEn) {
-        SeriesName seriesName = new SeriesName();
-        seriesName.setTitleEn(titleEn);
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withNullHandler(ExampleMatcher.NullHandler.IGNORE)
-                .withMatcher("title_en", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING));
-        return seriesNameRepository.findOne(Example.of(seriesName, matcher)).orElse(null);
+        // 精确匹配，语义上就应该精确查询
+        return seriesNameRepository.findByTitleEn(titleEn).orElse(null);
     }
 }
