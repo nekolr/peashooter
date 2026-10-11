@@ -5,11 +5,13 @@ import com.github.nekolr.peashooter.controller.cmd.datasource.TestRegexpCmd;
 import com.github.nekolr.peashooter.controller.vo.datasource.ItemTitleVo;
 import com.github.nekolr.peashooter.controller.vo.datasource.MatchResultVo;
 import com.github.nekolr.peashooter.entity.domain.DataSource;
+import com.github.nekolr.peashooter.entity.domain.GroupDataSource;
 import com.github.nekolr.peashooter.job.datasource.DataSourceRssRefreshJobManager;
 import com.github.nekolr.peashooter.repository.DataSourceRepository;
 import com.github.nekolr.peashooter.rss.convertor.Matcher;
 import com.github.nekolr.peashooter.rss.loader.RssLoader;
 import com.github.nekolr.peashooter.rss.writer.RssWriter;
+import com.github.nekolr.peashooter.service.IGroupDataSourceService;
 import com.github.nekolr.peashooter.service.IDataSourceService;
 import com.github.nekolr.peashooter.util.EpisodeTitleUtil;
 import com.github.nekolr.peashooter.util.FeedUtils;
@@ -26,8 +28,12 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -44,6 +50,7 @@ public class DataSourceServiceImpl implements IDataSourceService {
     private final RssLoader rssLoader;
     private final DataSourceRssRefreshJobManager jobManager;
     private final DataSourceRepository dataSourceRepository;
+    private final IGroupDataSourceService gdService;
 
     @Override
     @Cacheable(key = "'all'")
@@ -55,10 +62,21 @@ public class DataSourceServiceImpl implements IDataSourceService {
     @Transactional(rollbackFor = Exception.class)
     @Caching(evict = {@CacheEvict(key = "'all'"), @CacheEvict(key = "#p0")})
     public void removeById(Long id) {
+        // 仍被分组引用的数据源不允许删除（分组正则配置价值高，避免误删）
+        List<GroupDataSource> references = gdService.getByDatasourceId(id);
+        if (!CollectionUtils.isEmpty(references)) {
+            throw new RuntimeException("该数据源仍被 " + references.size() + " 个分组使用，请先解除关联");
+        }
         dataSourceRepository.deleteById(id);
         boolean success = jobManager.removeJob(String.valueOf(id));
         if (!success) {
             throw new RuntimeException("删除任务失败");
+        }
+        // 删除本地缓存的数据源 rss 文件，失败仅记 warn 不阻断
+        try {
+            Files.deleteIfExists(Paths.get(getDatasourceRssFilepath(id)));
+        } catch (IOException e) {
+            log.warn("删除数据源 {} 的 rss 缓存文件失败", id, e);
         }
     }
 

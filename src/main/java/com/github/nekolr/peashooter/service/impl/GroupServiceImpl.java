@@ -35,6 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.*;
@@ -61,6 +64,12 @@ public class GroupServiceImpl implements IGroupService {
         groupRepository.deleteById(id);
         List<GroupDataSource> groupDataSources = gdService.getByGroupId(id);
         groupDataSources.forEach(gd -> gdService.removeById(gd.getId()));
+        // 删除本地的分组 rss 文件，失败仅记 warn 不阻断
+        try {
+            Files.deleteIfExists(Paths.get(getGroupRssFilepath(id)));
+        } catch (IOException e) {
+            log.warn("删除分组 {} 的 rss 文件失败", id, e);
+        }
     }
 
     @Override
@@ -156,16 +165,21 @@ public class GroupServiceImpl implements IGroupService {
 
         List<GroupDataSource> groupDataSources = gdService.getByGroupId(group.getId());
         for (GroupDataSource ds : groupDataSources) {
-            String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(ds.getDatasourceId()));
-            SyndFeed syndFeed = FeedUtils.getFeed(rss);
-            List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
-            if (!CollectionUtils.isEmpty(entryList)) {
-                for (SyndEntry entry : entryList) {
-                    Item item = rssConvertor.convert(entry, convertContext);
-                    if (Objects.nonNull(item)) {
-                        items.add(item);
+            try {
+                String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(ds.getDatasourceId()));
+                SyndFeed syndFeed = FeedUtils.getFeed(rss);
+                List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
+                if (!CollectionUtils.isEmpty(entryList)) {
+                    for (SyndEntry entry : entryList) {
+                        Item item = rssConvertor.convert(entry, convertContext);
+                        if (Objects.nonNull(item)) {
+                            items.add(item);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                // 单个数据源加载失败不影响其他数据源
+                log.warn("加载数据源 {} 的 rss 失败，跳过", ds.getDatasourceId(), e);
             }
         }
         String xml = rssConvertor.combine(items, group.getId());
