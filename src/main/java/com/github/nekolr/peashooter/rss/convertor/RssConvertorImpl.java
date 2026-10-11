@@ -16,7 +16,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
-
 import static com.github.nekolr.peashooter.constant.Peashooter.*;
 
 @Component
@@ -76,7 +75,15 @@ public class RssConvertorImpl implements RssConvertor {
         }
 
         List<Matcher> matchers = ctx.matchers();
-        Series series = sonarrV3Api.getSeries(ctx.referenceId());
+        // 优先走请求内缓存，避免同一次刷新中对同一剧集重复调用 Sonarr API
+        Map<String, Series> seriesCache = ctx.seriesCache();
+        Series series = seriesCache.get(ctx.referenceId());
+        if (Objects.isNull(series)) {
+            series = sonarrV3Api.getSeries(ctx.referenceId());
+            if (Objects.nonNull(series)) {
+                seriesCache.put(ctx.referenceId(), series);
+            }
+        }
         if (Objects.isNull(series)) {
             return item;
         }

@@ -68,6 +68,9 @@ public class RawParserServiceImpl implements IRawParserService {
         List<Series> monitoredSeries = this.getMonitoredSeries();
         this.cachedSonarrIdTitleMap(monitoredSeries);
 
+        // 方法级缓存：同一次解析中对同一剧集只调用一次 Sonarr API
+        Map<String, Series> seriesCache = new HashMap<>();
+
         String rss = rssLoader.loadFromFile(getDatasourceRssFilepath(datasourceId));
         SyndFeed syndFeed = FeedUtils.getFeed(rss);
         List<SyndEntry> entryList = FeedUtils.getEntries(syndFeed);
@@ -91,7 +94,7 @@ public class RawParserServiceImpl implements IRawParserService {
                     for (Series series : monitoredSeries) {
                         if (equalsTitle(episodeName, series.title())) {
                             log.info("直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                            Item item = this.parseEntry(entry, series, episode);
+                            Item item = this.parseEntry(entry, series, episode, seriesCache);
                             if (item != null) {
                                 items.add(item);
                                 matched = true;
@@ -108,7 +111,7 @@ public class RawParserServiceImpl implements IRawParserService {
                                     .map(FindAliasTitle.Title::title).toArray(String[]::new);
                             if (equalsTitle(episodeName, aliasTitles)) {
                                 log.info("别名直接匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                                Item item = this.parseEntry(entry, series, episode);
+                                Item item = this.parseEntry(entry, series, episode, seriesCache);
                                 if (item != null) {
                                     items.add(item);
                                     matched = true;
@@ -123,7 +126,7 @@ public class RawParserServiceImpl implements IRawParserService {
                             // 模糊匹配 title
                             if (this.similarTitle(episodeName, series.title())) {
                                 log.info("模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                                Item item = this.parseEntry(entry, series, episode);
+                                Item item = this.parseEntry(entry, series, episode, seriesCache);
                                 if (item != null) {
                                     items.add(item);
                                     matched = true;
@@ -137,7 +140,7 @@ public class RawParserServiceImpl implements IRawParserService {
                                         .map(FindAliasTitle.Title::title).toArray(String[]::new);
                                 if (this.similarTitle(episodeName, aliasTitles)) {
                                     log.info("别名模糊匹配剧集: {}, 通过种子标题解析出的信息为: {}", series.title(), episode);
-                                    Item item = this.parseEntry(entry, series, episode);
+                                    Item item = this.parseEntry(entry, series, episode, seriesCache);
                                     if (item != null) {
                                         items.add(item);
                                         matched = true;
@@ -330,7 +333,7 @@ public class RawParserServiceImpl implements IRawParserService {
     /**
      * 解析 RSS 条目并转换为 Item 对象
      */
-    private Item parseEntry(SyndEntry entry, Series series, RawParser.Episode episode) {
+    private Item parseEntry(SyndEntry entry, Series series, RawParser.Episode episode, Map<String, Series> seriesCache) {
 
         int episodeNum = episode.episodeInfo().episode();
         int seasonNum = episode.seasonInfo().season();
@@ -339,8 +342,9 @@ public class RawParserServiceImpl implements IRawParserService {
 
         // 如果不是第一季，则可能需要计算相对集数（区别于绝对集数）
         if (seasonNum > 1) {
-            Series seriesDetail = sonarrV3Api.getSeries(series.id());
-            if (!CollectionUtils.isEmpty(seriesDetail.seasons())) {
+            // 优先走缓存，避免同一次解析中对同一剧集重复调用 Sonarr API
+            Series seriesDetail = seriesCache.computeIfAbsent(series.id(), id -> sonarrV3Api.getSeries(id));
+            if (Objects.nonNull(seriesDetail) && !CollectionUtils.isEmpty(seriesDetail.seasons())) {
                 int preEpisodeNumbers = seriesDetail.seasons().stream()
                         // 去掉特典
                         .filter(season -> !season.seasonNumber().equals(0))
