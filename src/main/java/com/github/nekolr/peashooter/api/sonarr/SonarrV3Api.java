@@ -6,7 +6,6 @@ import com.github.nekolr.peashooter.api.sonarr.request.AddRssIndexer;
 import com.github.nekolr.peashooter.api.sonarr.request.AddTorznabIndexer;
 import com.github.nekolr.peashooter.api.sonarr.response.Indexer;
 import com.github.nekolr.peashooter.api.sonarr.response.Notification;
-import com.github.nekolr.peashooter.api.sonarr.response.Queue;
 import com.github.nekolr.peashooter.api.sonarr.response.Series;
 import com.github.nekolr.peashooter.api.sonarr.response.Status;
 
@@ -33,11 +32,6 @@ public interface SonarrV3Api {
     String GET_QUEUE_LIST_URI = "/api/v3/queue";
 
     String GET_NOTIFICATION_URI = "/api/v3/notification";
-
-    /**
-     * 获取队列
-     */
-    List<Queue> getQueueList();
 
     /**
      * 添加 rss 索引器

@@ -373,7 +373,7 @@ public class RawParserServiceImpl implements IRawParserService {
         // 如果不是第一季，则可能需要计算相对集数（区别于绝对集数）
         if (seasonNum > 1) {
             // 优先走缓存，避免同一次解析中对同一剧集重复调用 Sonarr API
-            Series seriesDetail = seriesCache.computeIfAbsent(series.id(), id -> sonarrV3Api.getSeries(id));
+            Series seriesDetail = seriesCache.computeIfAbsent(series.id(), sonarrV3Api::getSeries);
             if (Objects.nonNull(seriesDetail) && !CollectionUtils.isEmpty(seriesDetail.seasons())) {
                 int preEpisodeNumbers = seriesDetail.seasons().stream()
                         // 去掉特典

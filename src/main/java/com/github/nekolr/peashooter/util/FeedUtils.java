@@ -103,16 +103,6 @@ public class FeedUtils {
         }
     }
 
-    public static Optional<SyndEntry> getEntry(SyndFeed feed, int index) {
-        if (Objects.nonNull(feed)) {
-            List<SyndEntry> entries = feed.getEntries();
-            if (!entries.isEmpty()) {
-                return Optional.ofNullable(entries.get(index));
-            }
-        }
-        return Optional.empty();
-    }
-
     public static String getAuthor(SyndEntry entry) {
         if (Objects.nonNull(entry)) {
             return entry.getAuthor();

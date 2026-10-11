@@ -6,7 +6,6 @@ import com.github.nekolr.peashooter.api.sonarr.request.AddRssIndexer;
 import com.github.nekolr.peashooter.api.sonarr.request.AddTorznabIndexer;
 import com.github.nekolr.peashooter.api.sonarr.response.Indexer;
 import com.github.nekolr.peashooter.api.sonarr.response.Notification;
-import com.github.nekolr.peashooter.api.sonarr.response.Queue;
 import com.github.nekolr.peashooter.api.sonarr.response.Series;
 import com.github.nekolr.peashooter.api.sonarr.response.Status;
 import com.github.nekolr.peashooter.config.SettingsManager;
@@ -30,35 +29,6 @@ public class SonarrV3Client implements SonarrV3Api {
     private final SettingsManager settingsManager;
     private final RestClient defaultRestClient;
 
-    @Override
-    public List<Queue> getQueueList() {
-        String apiKey = settingsManager.get().getSonarr().getApiKey();
-
-        ResponseEntity<String> response = defaultRestClient.get()
-                .uri(settingsManager.get().getSonarr().getUrl() + GET_QUEUE_LIST_URI, uriBuilder -> uriBuilder
-                        .queryParam("page", 1)
-                        .queryParam("pageSize", 50)
-                        .queryParam("includeSeries", true)
-                        .queryParam("includeEpisode", true)
-                        .build())
-                .header(X_API_KEY_HEADER_NAME, apiKey)
-                .retrieve()
-                .toEntity(String.class);
-
-        if (response.getStatusCode() != HttpStatus.OK) {
-            return Collections.emptyList();
-        }
-
-        JsonNode respObj = JacksonUtils.tryParse(() ->
-                JacksonUtils.getObjectMapper().readTree(response.getBody()));
-        JsonNode records = respObj.get("records");
-        if (records != null && records.isArray()) {
-            return JacksonUtils.tryParse(() ->
-                    JacksonUtils.getObjectMapper().readValue(records.toString(),
-                            JacksonUtils.getObjectMapper().getTypeFactory().constructCollectionType(List.class, Queue.class)));
-        }
-        return Collections.emptyList();
-    }
 
     @Override
     public Boolean addRssIndexer(AddRssIndexer indexer) {
