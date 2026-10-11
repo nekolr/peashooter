@@ -223,7 +223,7 @@ public class GroupServiceImpl implements IGroupService {
     }
 
     /**
-     * 按照发布时间去重，保留最新发布的
+     * 按照发布时间去重，保留最新发布的；任一方的发布时间为 null 时保留先出现的，避免 NPE
      */
     private List<SyndEntry> distinctByPubDate(List<SyndEntry> entryList) {
         Map<String, SyndEntry> dictionary = new LinkedHashMap<>();
@@ -233,7 +233,9 @@ public class GroupServiceImpl implements IGroupService {
                 dictionary.put(key, entry);
             } else {
                 SyndEntry oldEntry = dictionary.get(key);
-                if (oldEntry.getPublishedDate().before(entry.getPublishedDate())) {
+                Date oldDate = oldEntry.getPublishedDate();
+                Date newDate = entry.getPublishedDate();
+                if (Objects.nonNull(oldDate) && Objects.nonNull(newDate) && oldDate.before(newDate)) {
                     dictionary.put(key, entry);
                 }
             }

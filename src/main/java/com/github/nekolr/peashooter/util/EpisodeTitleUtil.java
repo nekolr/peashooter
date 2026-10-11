@@ -14,6 +14,8 @@ public class EpisodeTitleUtil {
     public static String formatEpisodeTitle(String seriesTitle, Integer season, String episodeNum, String language, String quality) {
         String epNum = FillUpZeroUtil.fill(episodeNum);
         String epTitle = Peashooter.EPISODE_TITLE_PREFIX + epNum;
-        return MessageFormat.format(EPISODE_TITLE_TEMPLATE, seriesTitle, season, epNum, epTitle, language, quality);
+        // MessageFormat 把单引号当作特殊字符，剧名带单引号时会吃掉后面的占位符，先转义
+        String safeTitle = seriesTitle == null ? null : seriesTitle.replace("'", "''");
+        return MessageFormat.format(EPISODE_TITLE_TEMPLATE, safeTitle, season, epNum, epTitle, language, quality);
     }
 }
