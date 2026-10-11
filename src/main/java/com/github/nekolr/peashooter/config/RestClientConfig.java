@@ -29,11 +29,6 @@ public class RestClientConfig {
         return this.createRestClient(false);
     }
 
-    @Bean("proxyRestClient")
-    public RestClient proxyRestClient() {
-        return this.createRestClient(true);
-    }
-
     private RestClient createRestClient(boolean useProxy) {
         RestClient.Builder builder = RestClient.builder();
         ClientHttpRequestFactory factory = createRequestFactory(useProxy);

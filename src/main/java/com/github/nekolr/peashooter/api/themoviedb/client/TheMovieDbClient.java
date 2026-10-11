@@ -3,6 +3,7 @@ package com.github.nekolr.peashooter.api.themoviedb.client;
 import com.github.nekolr.peashooter.api.themoviedb.TheMovieDbApi;
 import com.github.nekolr.peashooter.api.themoviedb.response.FindAliasTitle;
 import com.github.nekolr.peashooter.api.themoviedb.response.FindById;
+import com.github.nekolr.peashooter.config.ProxyRestClientProvider;
 import com.github.nekolr.peashooter.config.SettingsManager;
 import com.github.nekolr.peashooter.util.JacksonUtils;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class TheMovieDbClient implements TheMovieDbApi {
 
     private final SettingsManager settingsManager;
     private final RestClient defaultRestClient;
-    private final RestClient proxyRestClient;
+    private final ProxyRestClientProvider proxyRestClientProvider;
     private static final String DEFAULT_LANGUAGE = "zh-CN";
     private static final String DEFAULT_EXTERNAL_SOURCE = "imdb_id";
     private static final String TVDB_EXTERNAL_SOURCE = "tvdb_id";
@@ -53,7 +54,7 @@ public class TheMovieDbClient implements TheMovieDbApi {
         Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
         String url = THE_MOVIE_DB_HOST + MessageFormat.format(FIND_ALIAS_TITLE_URI, String.valueOf(seriesId));
         if (useProxy) {
-            return this.doFindAliasTitles(proxyRestClient, url, apiKey);
+            return this.doFindAliasTitles(proxyRestClientProvider.get(), url, apiKey);
         } else {
             return this.doFindAliasTitles(defaultRestClient, url, apiKey);
         }
@@ -64,7 +65,7 @@ public class TheMovieDbClient implements TheMovieDbApi {
         Boolean useProxy = settingsManager.get().getTheMovieDb().getUseProxy();
         String url = THE_MOVIE_DB_HOST + MessageFormat.format(FIND_BY_ID_URI, id);
         if (useProxy) {
-            return this.doFindById(proxyRestClient, url, apiKey, externalSource);
+            return this.doFindById(proxyRestClientProvider.get(), url, apiKey, externalSource);
         } else {
             return this.doFindById(defaultRestClient, url, apiKey, externalSource);
         }

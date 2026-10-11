@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import com.github.nekolr.peashooter.config.ProxyRestClientProvider;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,7 +20,7 @@ import java.nio.file.Paths;
 public class RssLoaderImpl implements RssLoader {
 
     private final RestClient defaultRestClient;
-    private final RestClient proxyRestClient;
+    private final ProxyRestClientProvider proxyRestClientProvider;
 
     @Override
     public String loadFromFile(String filepath) {
@@ -32,7 +34,7 @@ public class RssLoaderImpl implements RssLoader {
 
     @Override
     public String load(String url, boolean useProxy) {
-        RestClient restClient = useProxy ? proxyRestClient : defaultRestClient;
+        RestClient restClient = useProxy ? proxyRestClientProvider.get() : defaultRestClient;
         try {
             ResponseEntity<String> response = restClient.get()
                     .uri(url)
