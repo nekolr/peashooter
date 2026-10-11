@@ -170,6 +170,10 @@ public class SonarrServiceImpl implements ISonarrService {
     public Boolean setupAllGroupIndexer() {
         String apiKey = settingsManager.get().getBasic().getApiKey();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+        if (!StringUtils.hasText(mappingUrl)) {
+            log.warn("映射地址（mappingUrl）未配置，跳过创建全部分组的 RSS 索引器");
+            return Boolean.FALSE;
+        }
         String baseUrl = getAllGroupRssFileUrl(mappingUrl) + "?" + API_KEY_PARAM + "=" + apiKey;
         AddRssIndexer indexer = new AddRssIndexer(APPLICATION_NAME, baseUrl);
         indexer.setupDefaultFields();
@@ -181,6 +185,10 @@ public class SonarrServiceImpl implements ISonarrService {
         String name = APPLICATION_NAME + " Torznab";
         String apiKey = settingsManager.get().getBasic().getApiKey();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+        if (!StringUtils.hasText(mappingUrl)) {
+            log.warn("映射地址（mappingUrl）未配置，跳过创建 Torznab 索引器");
+            return Boolean.FALSE;
+        }
 
         AddTorznabIndexer indexer = new AddTorznabIndexer(name, mappingUrl, NEWZNAB_API_PATH, apiKey);
         indexer.setupDefaultFields();
@@ -227,6 +235,10 @@ public class SonarrServiceImpl implements ISonarrService {
     public void setupOnGrabWebhook() {
         String apiKey = settingsManager.get().getBasic().getApiKey();
         String mappingUrl = settingsManager.get().getBasic().getMappingUrl();
+        if (!StringUtils.hasText(mappingUrl)) {
+            log.warn("映射地址（mappingUrl）未配置，跳过创建 OnGrab Webhook");
+            return;
+        }
 
         String webhookUrl = getWebhookUrl(mappingUrl);
 
@@ -276,9 +288,6 @@ public class SonarrServiceImpl implements ISonarrService {
     }
 
     private String getWebhookUrl(String mappingUrl) {
-        if (mappingUrl.endsWith("/")) {
-            mappingUrl = mappingUrl.substring(0, mappingUrl.length() - 1);
-        }
-        return mappingUrl + "/api/torrents/onGrab";
+        return normalizeBaseUrl(mappingUrl) + "/api/torrents/onGrab";
     }
 }

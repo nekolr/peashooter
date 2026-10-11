@@ -171,36 +171,43 @@ public interface Peashooter {
     }
 
     /**
+     * 归一化映射地址：null/blank 返回空串，去掉末尾斜杠。
+     * 供各类 URL 拼接方法使用，避免 mappingUrl 为空时拼出 "null/api/..." 这类无效地址
+     */
+    static String normalizeBaseUrl(String mappingUrl) {
+        if (mappingUrl == null || mappingUrl.isBlank()) {
+            return "";
+        }
+        return mappingUrl.endsWith("/")
+                ? mappingUrl.substring(0, mappingUrl.length() - 1)
+                : mappingUrl;
+    }
+
+    /**
      * 获取分组的 rss 文件访问地址
      */
     static String getGroupRssFileUrl(String mappingUrl, Long groupId) {
-        return mappingUrl + "/api/group/" + groupId + XML_SUFFIX;
+        return normalizeBaseUrl(mappingUrl) + "/api/group/" + groupId + XML_SUFFIX;
     }
 
     /**
      * 获取自动分组的 rss 文件访问地址
      */
     static String getAutomatedGroupRssFileUrl(String mappingUrl) {
-        return mappingUrl + "/api/group/" + AUTOMATED + XML_SUFFIX;
+        return normalizeBaseUrl(mappingUrl) + "/api/group/" + AUTOMATED + XML_SUFFIX;
     }
 
     /**
      * 获取全部分组的 rss 文件访问地址
      */
     static String getAllGroupRssFileUrl(String mappingUrl) {
-        return mappingUrl + "/api/group/allRss.xml";
+        return normalizeBaseUrl(mappingUrl) + "/api/group/allRss.xml";
     }
 
     /**
      * 获取 Newznab/Torznab 索引器访问地址
      */
     static String getNewznabUrl(String mappingUrl) {
-        if (mappingUrl == null || mappingUrl.isBlank()) {
-            return "";
-        }
-        String baseUrl = mappingUrl.endsWith("/")
-                ? mappingUrl.substring(0, mappingUrl.length() - 1)
-                : mappingUrl;
-        return baseUrl + NEWZNAB_API_PATH;
+        return normalizeBaseUrl(mappingUrl) + NEWZNAB_API_PATH;
     }
 }
