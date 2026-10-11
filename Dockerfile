@@ -23,12 +23,9 @@ ENV PEASHOOTER_USERNAME=admin \
 
 WORKDIR /data
 COPY --chmod=755 --from=build /usr/src/app/target/peashooter.jar .
-RUN useradd --create-home --shell /usr/sbin/nologin peashooter \
-    && mkdir -p peashooter \
-    && chown -R peashooter:peashooter /data
-USER peashooter
+RUN mkdir -p peashooter
 
 EXPOSE 8962
-VOLUME ${HOME_DIR}/peashooter
+VOLUME /data/peashooter
 
 CMD ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "peashooter.jar"]
