@@ -17,7 +17,11 @@ import static com.github.nekolr.peashooter.constant.Peashooter.SETTINGS_FILE_NAM
 
 @Component
 public class SettingsManager {
-    private Settings settings;
+    /**
+     * volatile 保证读线程能及时看到 update() 的整体替换；
+     * get() 返回的是当前快照，调用方不应原地修改子对象（应整体替换后 update）
+     */
+    private volatile Settings settings;
 
     /**
      * 获取全部配置

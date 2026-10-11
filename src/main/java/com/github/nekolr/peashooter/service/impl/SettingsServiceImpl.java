@@ -42,8 +42,9 @@ public class SettingsServiceImpl implements ISettingsService {
                 .apiKey(cmd.apiKey())
                 .build();
 
-        settings.setBasic(basic);
-        settingsManager.update(settings);
+        // 构造全新的 Settings 整体替换，避免在共享对象上原地修改造成可见性问题
+        settingsManager.update(new Settings(basic, settings.getSonarr(), settings.getQbittorrent(),
+                settings.getHttpProxy(), settings.getTheMovieDb()));
     }
 
     @Override
@@ -55,8 +56,9 @@ public class SettingsServiceImpl implements ISettingsService {
                 .port(cmd.port())
                 .build();
 
-        settings.setHttpProxy(httpProxy);
-        settingsManager.update(settings);
+        // 构造全新的 Settings 整体替换，避免在共享对象上原地修改造成可见性问题
+        settingsManager.update(new Settings(settings.getBasic(), settings.getSonarr(), settings.getQbittorrent(),
+                httpProxy, settings.getTheMovieDb()));
     }
 
     @Override
@@ -69,8 +71,9 @@ public class SettingsServiceImpl implements ISettingsService {
                 .syncSeconds(cmd.syncSeconds())
                 .build();
 
-        settings.setSonarr(sonarr);
-        settingsManager.update(settings);
+        // 构造全新的 Settings 整体替换，避免在共享对象上原地修改造成可见性问题
+        settingsManager.update(new Settings(settings.getBasic(), sonarr, settings.getQbittorrent(),
+                settings.getHttpProxy(), settings.getTheMovieDb()));
     }
 
     @Override
@@ -83,16 +86,19 @@ public class SettingsServiceImpl implements ISettingsService {
                 .password(cmd.password())
                 .build();
 
-        settings.setQbittorrent(qBitTorrent);
-        settingsManager.update(settings);
+        // 构造全新的 Settings 整体替换，避免在共享对象上原地修改造成可见性问题
+        settingsManager.update(new Settings(settings.getBasic(), settings.getSonarr(), qBitTorrent,
+                settings.getHttpProxy(), settings.getTheMovieDb()));
     }
 
     @Override
     public String refreshApiKey() {
         Settings settings = settingsManager.get();
         String apiKey = RandomUtil.generate(32);
-        settings.getBasic().setApiKey(apiKey);
-        settingsManager.update(settings);
+        Basic basic = new Basic(apiKey, settings.getBasic().getMappingUrl());
+        // 构造全新的 Settings 整体替换，避免在共享对象上原地修改造成可见性问题
+        settingsManager.update(new Settings(basic, settings.getSonarr(), settings.getQbittorrent(),
+                settings.getHttpProxy(), settings.getTheMovieDb()));
         return apiKey;
     }
 
@@ -110,7 +116,8 @@ public class SettingsServiceImpl implements ISettingsService {
                 .useProxy(cmd.useProxy())
                 .build();
 
-        settings.setTheMovieDb(theMovieDb);
-        settingsManager.update(settings);
+        // 构造全新的 Settings 整体替换，避免在共享对象上原地修改造成可见性问题
+        settingsManager.update(new Settings(settings.getBasic(), settings.getSonarr(), settings.getQbittorrent(),
+                settings.getHttpProxy(), theMovieDb));
     }
 }
