@@ -1,6 +1,7 @@
 package com.github.nekolr.peashooter.parser;
 
 import com.github.nekolr.peashooter.exception.ParseTitleException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.regex.Pattern;
 /**
  * reference: <a href="https://github.com/EstrellaXD/Auto_Bangumi/blob/c9c2b28389aac6ac4d778cdc7de1a77ca024b97e/auto_bangumi/parser/analyser/raw_parser.py">Auto_Bangumi Raw Parser</a>
  */
+@Slf4j
 public class RawParser {
 
     /**
@@ -32,7 +34,7 @@ public class RawParser {
     /**
      * 季度信息正则表达式
      */
-    private static final String SEASON_REGEX = "[Ss]\\d{1,2}|Season \\d{1,2}|[第].[季期]";
+    private static final String SEASON_REGEX = "[Ss]\\d{1,2}|Season \\d{1,2}|[第][零一二三四五六七八九十百]+[季期]";
 
     /**
      * 季度信息正则表达式
@@ -84,6 +86,50 @@ public class RawParser {
             "九", 9,
             "十", 10
     );
+
+    /**
+     * 解析中文数字（支持 零~九十九，如 十=10、十一=11、二十=20、二十一=21）
+     *
+     * @param chinese 中文数字字符串
+     * @return 对应的整数，无法解析时返回 null
+     */
+    static Integer parseChineseNumber(String chinese) {
+        if (chinese == null || chinese.isBlank()) {
+            return null;
+        }
+        // 纯个位
+        Integer digit = CHINESE_NUMBER_MAP.get(chinese);
+        if (digit != null) {
+            return digit;
+        }
+
+        int tenIndex = chinese.indexOf('十');
+        if (tenIndex < 0) {
+            return null;
+        }
+
+        // 十X = 10 + X
+        if (tenIndex == 0) {
+            String ones = chinese.substring(1);
+            if (ones.isEmpty()) {
+                return 10;
+            }
+            Integer onesValue = CHINESE_NUMBER_MAP.get(ones);
+            return onesValue != null ? 10 + onesValue : null;
+        }
+
+        // X十 = X * 10，X十Y = X * 10 + Y
+        Integer tensValue = CHINESE_NUMBER_MAP.get(chinese.substring(0, tenIndex));
+        if (tensValue == null) {
+            return null;
+        }
+        String rest = chinese.substring(tenIndex + 1);
+        if (rest.isEmpty()) {
+            return tensValue * 10;
+        }
+        Integer onesValue = CHINESE_NUMBER_MAP.get(rest);
+        return onesValue != null ? tensValue * 10 + onesValue : null;
+    }
 
     /**
      * 预处理标题
@@ -146,7 +192,12 @@ public class RawParser {
                     season = Integer.parseInt(maybeChineseNumberSeason);
                 } catch (NumberFormatException e) {
                     // 如果转换失败，可能是中文数字
-                    season = CHINESE_NUMBER_MAP.get(maybeChineseNumberSeason);
+                    season = parseChineseNumber(maybeChineseNumberSeason);
+                    if (Objects.isNull(season)) {
+                        // 无法解析的中文数字，兜底按第 1 季处理
+                        log.warn("无法解析中文数字季度信息: {}，按第 1 季处理", maybeChineseNumberSeason);
+                        season = 1;
+                    }
                 }
                 break;
             }
