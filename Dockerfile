@@ -19,12 +19,14 @@ FROM eclipse-temurin:25-jre
 
 ENV PEASHOOTER_USERNAME=admin \
     PEASHOOTER_PASSWORD=admin \
-    TZ=Asia/Shanghai \
-    HOME_DIR=/data
+    TZ=Asia/Shanghai
 
-WORKDIR ${HOME_DIR}
+WORKDIR /data
 COPY --chmod=755 --from=build /usr/src/app/target/peashooter.jar .
-RUN mkdir -p peashooter
+RUN useradd --create-home --shell /usr/sbin/nologin peashooter \
+    && mkdir -p peashooter \
+    && chown -R peashooter:peashooter /data
+USER peashooter
 
 EXPOSE 8962
 VOLUME ${HOME_DIR}/peashooter

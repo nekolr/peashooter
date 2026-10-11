@@ -54,7 +54,7 @@ public class DataSourceController {
      */
     @PostMapping("getList")
     public JsonBean<Page<DataSource>> getDataSourceList(@RequestBody GetDataSourceListCmd cmd) {
-        Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
+        Pageable pageable = clampPageable(cmd.pageNo(), cmd.pageSize());
         return JsonBean.ok(dataSourceService.findAllByPage(cmd, pageable));
     }
 
@@ -86,4 +86,13 @@ public class DataSourceController {
         return JsonBean.ok(dataSourceService.testRegexp(cmd));
     }
 
+
+    /**
+     * 分页参数钳制：null 默认 (1, 10)，pageSize 上限 100
+     */
+    private static Pageable clampPageable(Integer pageNo, Integer pageSize) {
+        int page = (pageNo == null || pageNo < 1) ? 1 : pageNo;
+        int size = (pageSize == null || pageSize < 1) ? 10 : Math.min(pageSize, 100);
+        return PageRequest.of(page - 1, size);
+    }
 }

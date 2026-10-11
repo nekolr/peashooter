@@ -89,7 +89,7 @@ public class GroupController {
      */
     @PostMapping("getList")
     public JsonBean<Page<GroupVo>> getGroupList(@RequestBody GetGroupListCmd cmd) {
-        Pageable pageable = PageRequest.of(cmd.pageNo() - 1, cmd.pageSize());
+        Pageable pageable = clampPageable(cmd.pageNo(), cmd.pageSize());
         return JsonBean.ok(groupService.findAllByPage(cmd, pageable));
     }
 
@@ -117,5 +117,14 @@ public class GroupController {
     public JsonBean<Void> refreshRss(@RequestParam("id") Long id) {
         groupService.refreshRss(id);
         return JsonBean.ok();
+    }
+
+    /**
+     * 分页参数钳制：null 默认 (1, 10)，pageSize 上限 100
+     */
+    private static Pageable clampPageable(Integer pageNo, Integer pageSize) {
+        int page = (pageNo == null || pageNo < 1) ? 1 : pageNo;
+        int size = (pageSize == null || pageSize < 1) ? 10 : Math.min(pageSize, 100);
+        return PageRequest.of(page - 1, size);
     }
 }

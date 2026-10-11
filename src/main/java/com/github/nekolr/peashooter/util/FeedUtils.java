@@ -277,7 +277,7 @@ public class FeedUtils {
     private static Element getForeignMarkup(SyndEntry entry, String name) {
         if (Objects.nonNull(entry)) {
             List<Element> foreignMarkup = entry.getForeignMarkup();
-            if (Objects.nonNull(foreignMarkup) & !foreignMarkup.isEmpty()) {
+            if (Objects.nonNull(foreignMarkup) && !foreignMarkup.isEmpty()) {
                 Optional<Element> op = foreignMarkup.stream().filter(e -> name.equals(e.getName())).findFirst();
                 if (op.isPresent()) {
                     return op.get();
@@ -290,7 +290,7 @@ public class FeedUtils {
     private static String getChildValue(Element element, String name) {
         if (Objects.nonNull(element)) {
             List<Element> children = element.getChildren();
-            if (Objects.nonNull(children) & !children.isEmpty()) {
+            if (Objects.nonNull(children) && !children.isEmpty()) {
                 Optional<Element> op = children.stream().filter(e -> name.equals(e.getName())).findFirst();
                 if (op.isPresent()) {
                     return op.get().getValue();

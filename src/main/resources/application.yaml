@@ -9,7 +9,7 @@ spring:
   jackson:
     time-zone: GMT+8
   jpa:
-    open-in-view: true
+    open-in-view: false
     show-sql: false
     hibernate:
       ddl-auto: update

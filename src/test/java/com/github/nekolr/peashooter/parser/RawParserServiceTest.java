@@ -14,7 +14,6 @@ public class RawParserServiceTest {
 
     @Test
     public void testAutoParse() {
-        Long datasourceId = 1L; // Replace with a valid datasource ID
-        rawParserService.autoParse(datasourceId);
+        rawParserService.autoParseAll();
     }
 }
