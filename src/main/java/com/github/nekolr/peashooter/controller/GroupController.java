@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.regex.Pattern;
 
 import static com.github.nekolr.peashooter.constant.Peashooter.CHARSET;
 
@@ -38,11 +40,24 @@ public class GroupController {
     }
 
     /**
+     * 合法的 rss 文件名（纯字母数字 + .xml 后缀），防止路径穿越
+     */
+    private static final Pattern VALID_FILENAME_PATTERN = Pattern.compile("^[0-9A-Za-z]+\\.xml$");
+
+    /**
      * 获取分组的 rss 文件
      */
     @GetMapping("{filename}")
-    public void getGroupRss(@PathVariable String filename, HttpServletResponse resp) {
+    public void getGroupRss(@PathVariable String filename, HttpServletResponse resp) throws IOException {
+        if (!VALID_FILENAME_PATTERN.matcher(filename).matches()) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         String rss = groupService.getRss(filename);
+        if (!StringUtils.hasText(rss)) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         try {
             OutputStream out = resp.getOutputStream();
             resp.setContentType(MediaType.APPLICATION_RSS_XML_VALUE);
